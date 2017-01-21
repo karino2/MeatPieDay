@@ -11,6 +11,11 @@ android {
     }
     */
 
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
     defaultConfig {
         applicationId "karino2.livejournal.com.meatpieday"
         minSdkVersion 15
@@ -18,6 +23,10 @@ android {
         versionCode 1
         versionName "1.0"
         multiDexEnabled true
+
+        jackOptions {
+            enabled true
+        }
     }
     buildTypes {
         release {
@@ -34,4 +43,6 @@ dependencies {
 
     annotationProcessor 'com.github.gfx.android.orma:orma-processor:4.1.0'
     compile 'com.github.gfx.android.orma:orma:4.1.0'
+
+    compile 'commons-io:commons-io:2.5'
 }

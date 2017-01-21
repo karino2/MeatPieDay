@@ -27,4 +27,15 @@
         android:layout_above="@id/buttonNew"
         android:layout_marginBottom="28dp" />
 
+    <Button
+        android:text="Img"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/listView"
+        android:layout_toLeftOf="@+id/buttonNew"
+        android:layout_toStartOf="@+id/buttonNew"
+        android:layout_marginRight="15dp"
+        android:layout_marginEnd="15dp"
+        android:id="@+id/buttonNewImage" />
+
 </RelativeLayout>

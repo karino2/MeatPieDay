@@ -23,4 +23,8 @@ public class Cell {
     @Column
     public String source;
 
+
+    public static final int CELL_TYPE_TEXT = 0;
+    public static final int CELL_TYPE_IMAGE = 1;
+
 }
