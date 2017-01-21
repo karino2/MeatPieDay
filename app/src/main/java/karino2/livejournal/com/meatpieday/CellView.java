@@ -2,12 +2,15 @@ package karino2.livejournal.com.meatpieday;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.text.TextPaint;
 import android.util.AttributeSet;
+import android.util.Base64;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -41,15 +44,41 @@ public class CellView extends FrameLayout {
         }
     }
 
-    public void setMarkdownContents(String text) {
+    public void bindCell(Cell cell) {
+        this.cell = cell;
+
+        if(cell.cellType == Cell.CELL_TYPE_IMAGE) {
+            setImageContents(cell.source);
+        } else {
+            setMarkdownContents(cell.source);
+        }
+    }
+
+    void setImageContents(String base64) {
+        ensureInitialize();
+
+        byte[] decodedBytes = Base64.decode(base64, Base64.DEFAULT);
+        Bitmap bmp = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+        imageView.setImageBitmap(bmp);
+
+        if(cellType != CellType.IMAGE) {
+            imageView.setVisibility(VISIBLE);
+            markDownView.setVisibility(GONE);
+        }
+        cellType = CellType.IMAGE;
+    }
+
+    void setMarkdownContents(String text) {
         ensureInitialize();
 
         markDownView.setText(text);
 
-        if(cellType == CellType.IMAGE) {
+        if(cellType != CellType.TEXT) {
             imageView.setVisibility(GONE);
             markDownView.setVisibility(VISIBLE);
         }
+        cellType = CellType.TEXT;
+
 
     }
 

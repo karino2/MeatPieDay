@@ -84,7 +84,7 @@ public class BookActivity extends AppCompatActivity {
                 if(convertView == null) {
                     view = (CellView)getLayoutInflater().inflate(R.layout.list_item, null);
                     Cell cell = getItem(position);
-                    view.setMarkdownContents(cell.source);
+                    view.bindCell(cell);
                 } else {
                     view = (CellView)convertView;
                 }
@@ -103,11 +103,17 @@ public class BookActivity extends AppCompatActivity {
                 cell.cellType = Cell.CELL_TYPE_TEXT;
                 cell.source = "This is test.\n Here is another test.";
 
+                orma.prepareInsertIntoCellAsSingle()
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(x->x.execute(cell));
+
+                /*
                 orma.prepareInsertIntoCell()
                         .executeAsSingle(cell)
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(x->adapter.notifyDataSetChanged());
+                        */
                 // orma.insertIntoCell(cell);
                 /*
                 new Thread(
@@ -133,6 +139,20 @@ public class BookActivity extends AppCompatActivity {
 
 
         findViewById(R.id.buttonNewImage).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Cell cell = new Cell();
+                cell.book = book;
+                cell.cellType = Cell.CELL_TYPE_IMAGE;
+                cell.source = EMPTY_IMAGE_BASE64;
+
+                orma.prepareInsertIntoCellAsSingle()
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(x->x.execute(cell));
+            }
+        });
+
+        findViewById(R.id.buttonDebug).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent();
@@ -195,4 +215,6 @@ public class BookActivity extends AppCompatActivity {
             }
         }
     }
+
+    final String EMPTY_IMAGE_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAoAAAADICAYAAAB4WVALAAAABHNCSVQICAgIfAhkiAAAA75JREFUeJzt1jEBwCAAwDDAvy ZkYAdcbEcTBT079z13AACQsf4OAADgWwYQACDGAAIAxBhAAIAYAwgAEGMAAQBiDCAAQIwBBACIMYAAADEGEAAgxgACAMQY QACAGAMIABBjAAEAYgwgAECMAQQAiDGAAAAxBhAAIMYAAgDEGEAAgBgDCAAQYwABAGIMIABAjAEEAIgxgAAAMQYQACDGAA IAxBhAAIAYAwgAEGMAAQBiDCAAQIwBBACIMYAAADEGEAAgxgACAMQYQACAGAMIABBjAAEAYgwgAECMAQQAiDGAAAAxBhAA IMYAAgDEGEAAgBgDCAAQYwABAGIMIABAjAEEAIgxgAAAMQYQACDGAAIAxBhAAIAYAwgAEGMAAQBiDCAAQIwBBACIMYAAAD EGEAAgxgACAMQYQACAGAMIABBjAAEAYgwgAECMAQQAiDGAAAAxBhAAIMYAAgDEGEAAgBgDCAAQYwABAGIMIABAjAEEAIgx gAAAMQYQACDGAAIAxBhAAIAYAwgAEGMAAQBiDCAAQIwBBACIMYAAADEGEAAgxgACAMQYQACAGAMIABBjAAEAYgwgAECMAQ QAiDGAAAAxBhAAIMYAAgDEGEAAgBgDCAAQYwABAGIMIABAjAEEAIgxgAAAMQYQACDGAAIAxBhAAIAYAwgAEGMAAQBiDCAA QIwBBACIMYAAADEGEAAgxgACAMQYQACAGAMIABBjAAEAYgwgAECMAQQAiDGAAAAxBhAAIMYAAgDEGEAAgBgDCAAQYwABAG IMIABAjAEEAIgxgAAAMQYQACDGAAIAxBhAAIAYAwgAEGMAAQBiDCAAQIwBBACIMYAAADEGEAAgxgACAMQYQACAGAMIABBj AAEAYgwgAECMAQQAiDGAAAAxBhAAIMYAAgDEGEAAgBgDCAAQYwABAGIMIABAjAEEAIgxgAAAMQYQACDGAAIAxBhAAIAYAw gAEGMAAQBiDCAAQIwBBACIMYAAADEGEAAgxgACAMQYQACAGAMIABBjAAEAYgwgAECMAQQAiDGAAAAxBhAAIMYAAgDEGEAA gBgDCAAQYwABAGIMIABAjAEEAIgxgAAAMQYQACDGAAIAxBhAAIAYAwgAEGMAAQBiDCAAQIwBBACIMYAAADEGEAAgxgACAM QYQACAGAMIABBjAAEAYgwgAECMAQQAiDGAAAAxBhAAIMYAAgDEGEAAgBgDCAAQYwABAGIMIABAjAEEAIgxgAAAMQYQACDG AAIAxBhAAIAYAwgAEGMAAQBiDCAAQMwDTJIFIhe4sbUAAAAASUVORK5CYII=";
 }

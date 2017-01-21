@@ -38,4 +38,15 @@
         android:layout_marginEnd="15dp"
         android:id="@+id/buttonNewImage" />
 
+    <Button
+        android:text="D"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/buttonDebug"
+        android:layout_alignParentBottom="true"
+        android:layout_toLeftOf="@+id/buttonNewImage"
+        android:layout_toStartOf="@+id/buttonNewImage"
+        android:layout_marginRight="13dp"
+        android:layout_marginEnd="13dp" />
+
 </RelativeLayout>
