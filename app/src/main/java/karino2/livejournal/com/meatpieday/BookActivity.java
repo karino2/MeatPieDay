@@ -76,7 +76,7 @@ public class BookActivity extends AppCompatActivity {
         ListView lv = (ListView)findViewById(R.id.listView);
 
 
-        adapter = new OrmaListAdapter<Cell>(this, orma.relationOfCell()) {
+        adapter = new OrmaListAdapter<Cell>(this, orma.relationOfCell().bookEq(book)) {
 
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {

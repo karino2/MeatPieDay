@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -19,11 +20,19 @@ import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.github.gfx.android.orma.widget.OrmaListAdapter;
+import com.google.gson.Gson;
+import com.google.gson.stream.JsonWriter;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
@@ -143,21 +152,121 @@ public class BookListActivity extends AppCompatActivity {
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
         menu.add(Menu.NONE, R.id.rename_book_item, Menu.NONE, "rename");
+        menu.add(Menu.NONE, R.id.export_book_item, Menu.NONE, "export");
+    }
+
+    void showMessage(String msg) {
+        Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+    }
+
+    void exportBook(Book target) {
+
+        SimpleDateFormat timeStampFormat = new SimpleDateFormat("yyyyMMdd_HHmmssSS");
+        String filename = timeStampFormat.format(new Date()) + "_" + target.name + ".ipynb";
+        File file = new File(Environment.getExternalStorageDirectory(), filename);
+
+        try {
+            JsonWriter writer = new JsonWriter(new FileWriter(file));
+            writer.beginObject();
+
+            writer.name("cells");
+            writer.beginArray();
+            getOrmaDatabase().selectFromCell()
+                    .bookEq(target)
+                    .executeAsObservable()
+                    .subscribe(cell -> {
+                       cell.toJson(writer);
+                    });
+
+
+
+            writer.endArray(); // end of cells array
+
+            /*
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 2",
+   "language": "python",
+   "name": "python2"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 2
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython2",
+   "version": "2.7.11"
+  }
+ },
+
+             */
+            writer.name("metadata"); // begin metaata:
+            writer.beginObject();
+
+            writer.name("kernelspec")
+                    .beginObject()
+                    .name("display_name").value("Python 2")
+                    .name("language").value("python")
+                    .name("name").value("python2")
+                    .endObject();
+            writer.name("lanbuage_info")
+                    .beginObject()
+                    .name("codemirror_mode")
+                        .beginObject()
+                            .name("name").value("ipython")
+                            .name("version").value(2)
+                        .endObject()
+                    .name("file_extension").value(".py")
+                    .name("mimetype").value("text/x-python")
+                    .name("name").value("python")
+                    .name("nbconvert_exporter").value("python")
+                    .name("pygments_lexer").value("ipython2")
+                    .name("version").value("2.7.11")
+                    .endObject();
+            writer.endObject(); // end metadata;
+
+            /*
+             "nbformat": 4,
+             "nbformat_minor": 0
+             */
+            writer.name("nbformat").value(4);
+            writer.name("nbformat_minor").value(0);
+
+            writer.endObject();
+            writer.close();
+        } catch (IOException e) {
+            showMessage("JsonExport fail with IOExcetion: " + e.getMessage());
+            e.printStackTrace();
+        }
+
     }
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        Book book = (Book)info.targetView.getTag();
         switch(item.getItemId()) {
             case R.id.rename_book_item:
                 Bundle args = new Bundle();
-                Book book = (Book)info.targetView.getTag();
                 // info.targetView
                 args.putLong("BOOK_ID", book.id);
                 args.putString("BOOK_NAME", book.name);
                 showDialog(RENAME_DIALOG_ID, args);
 
                 break;
+            case R.id.export_book_item:
+                Single.create(emitter->{
+                    exportBook(book);
+                    emitter.onSuccess(1);
+                })
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(x->showMessage("export done"));
+
         }
         return super.onContextItemSelected(item);
     }
