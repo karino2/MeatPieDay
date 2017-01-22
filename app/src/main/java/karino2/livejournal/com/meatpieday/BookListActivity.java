@@ -58,6 +58,9 @@ public class BookListActivity extends AppCompatActivity {
                 })).start();
 
                 return true;
+            case R.id.menu_new:
+                createNewBook();
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -101,18 +104,18 @@ public class BookListActivity extends AppCompatActivity {
             orma.
             orma.insertIntoBook(book);
             */
+            
+            createNewBook();
 
+            /*
             new Thread(
                     new Runnable() {
                         @Override
                         public void run() {
-                            Book book = new Book();
-                            book.name = "(New Book)";
-                            book.createdTime = new Date();
-                            orma.insertIntoBook(book);
                         }
                     }
             ).start();
+            */
         }
 
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -148,11 +151,34 @@ public class BookListActivity extends AppCompatActivity {
 
     }
 
+    private void createNewBook() {
+        OrmaDatabase orma = getOrmaDatabase();
+        orma.prepareInsertIntoBookAsSingle()
+                .subscribeOn(Schedulers.io())
+                .doOnSuccess((inserter) -> {
+                    Book book = new Book();
+                    book.name = "(New Book)";
+                    book.createdTime = new Date();
+                    inserter.execute(book);
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe((inserter) -> {
+                    adapter.notifyDataSetChanged();
+                    /*
+                    inserter.executeAsSingle(book)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(()->adapter.notifyDataSetChanged())
+                            */
+
+                });
+    }
+
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
         menu.add(Menu.NONE, R.id.rename_book_item, Menu.NONE, "rename");
         menu.add(Menu.NONE, R.id.export_book_item, Menu.NONE, "export");
+        menu.add(Menu.NONE, R.id.delete_book_item, Menu.NONE, "delete");
     }
 
     void showMessage(String msg) {
@@ -266,6 +292,17 @@ public class BookListActivity extends AppCompatActivity {
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(x->showMessage("export done"));
+                break;
+
+            case R.id.delete_book_item:
+                getOrmaDatabase()
+                        .deleteFromBook()
+                        .idEq(book.id)
+                        .executeAsSingle()
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(x->adapter.notifyDataSetChanged());
+                break;
 
         }
         return super.onContextItemSelected(item);
@@ -306,7 +343,9 @@ public class BookListActivity extends AppCompatActivity {
                                         .executeAsSingle()
                                         .subscribeOn(Schedulers.io())
                                         .observeOn(AndroidSchedulers.mainThread())
-                                        .subscribe(x->adapter.notifyDataSetInvalidated());
+                                        .subscribe(x->adapter.notifyDataSetChanged());
+
+                                        // .subscribe(x->adapter.notifyDataSetInvalidated());
                                         // seems not working. but add here anyway.
                                         // not working either
                                         // .subscribe(x->adapter.notifyDataSetChanged());
