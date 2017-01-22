@@ -18,8 +18,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".BookActivity" />
-        <activity android:name=".EditActivity"></activity>
+        <activity android:name=".BookActivity">
+        </activity>
+        <activity android:name=".EditActivity" />
+        <activity android:name=".ImageReceiveActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="image/png" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

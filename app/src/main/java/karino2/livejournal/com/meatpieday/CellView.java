@@ -31,6 +31,9 @@ public class CellView extends FrameLayout {
     ImageView imageView;
     Cell cell = null;
 
+    public boolean isImage() { return cellType == CellType.IMAGE; }
+    public Cell getBoundCell() { return cell; }
+
     public CellView(Context context, AttributeSet attrs) {
         super(context, attrs);
     }

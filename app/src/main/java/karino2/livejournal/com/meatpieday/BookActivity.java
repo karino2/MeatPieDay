@@ -1,14 +1,20 @@
 package karino2.livejournal.com.meatpieday;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.PersistableBundle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
+import android.view.ContextMenu;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.github.gfx.android.orma.widget.OrmaListAdapter;
 
@@ -18,6 +24,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
+import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
@@ -98,6 +105,8 @@ public class BookActivity extends AppCompatActivity {
         };
         lv.setAdapter(adapter);
 
+        registerForContextMenu(lv);
+
         findViewById(R.id.buttonNew).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -144,6 +153,51 @@ public class BookActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+
+        if(((CellView)  ((AdapterView.AdapterContextMenuInfo)menuInfo).targetView).isImage()) {
+            menu.add(Menu.NONE, R.id.edit_image_item, Menu.NONE, "edit");
+        }
+        menu.add(Menu.NONE, R.id.delete_item, Menu.NONE, "delete");
+    }
+
+    void showMessage(String msg) {
+        Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        Cell cell = ((CellView)info.targetView).getBoundCell();
+        switch(item.getItemId()) {
+            case R.id.edit_image_item:
+                getSharedPreferences("state", MODE_PRIVATE)
+                        .edit()
+                        .putLong("WAIT_IMAGE_ID", cell.id)
+                        .commit();
+
+                showMessage("Send image to this app, then replace selected image.");
+                break;
+            case R.id.delete_item:
+                Completable.fromAction(()-> {
+                    buildOrmaDatabase()
+                            .deleteFromCell()
+                            .idEq(cell.id)
+                            .execute();
+                }).subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(() -> adapter.notifyDataSetChanged());
+
+                break;
+        }
+
+
+
+        return super.onContextItemSelected(item);
     }
 
     @Override
