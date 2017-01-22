@@ -1,5 +1,8 @@
 package karino2.livejournal.com.meatpieday;
 
+import android.graphics.BitmapFactory;
+import android.util.Base64;
+
 import com.github.gfx.android.orma.annotation.Column;
 import com.github.gfx.android.orma.annotation.PrimaryKey;
 import com.github.gfx.android.orma.annotation.Table;
@@ -43,6 +46,8 @@ public class Cell {
         }
     }
 
+
+
     void toJsonImageCell(JsonWriter writer) throws IOException {
         /*
           {
@@ -82,7 +87,7 @@ public class Cell {
                 .beginArray()
                 .beginObject()
                 .name("data").beginObject()
-                        .name("image/png").value(source)
+                        .name(getMimeType(source) /* "image/png" */ ).value(source)
                         .name("text/plain").beginArray().value("<IPython.core.display.Image object>").endArray()
                     .endObject()
                 .name("execution_count").value(DUMMY_EXEC_COUNT) // dummy val
@@ -97,6 +102,16 @@ public class Cell {
 
         writer.endObject();
     }
+
+    private String getMimeType(String source) {
+        BitmapFactory.Options opt = new BitmapFactory.Options();
+        opt.inJustDecodeBounds = true;
+        byte[] decodedBytes = Base64.decode(source, Base64.DEFAULT);
+        BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length, opt);
+
+        return opt.outMimeType;
+    }
+
     void toJsonMarkdownCell(JsonWriter writer) throws IOException {
         /*
         {
