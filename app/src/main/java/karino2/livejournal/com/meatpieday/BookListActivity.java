@@ -295,13 +295,19 @@ public class BookListActivity extends AppCompatActivity {
                 break;
 
             case R.id.delete_book_item:
-                getOrmaDatabase()
-                        .deleteFromBook()
-                        .idEq(book.id)
-                        .executeAsSingle()
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(x->adapter.notifyDataSetChanged());
+                OrmaDatabase orma = getOrmaDatabase();
+                orma.transactionAsCompletable( () -> {
+                    orma.deleteFromCell()
+                            .bookEq(book)
+                            .execute();
+                    orma.deleteFromBook()
+                            .idEq(book.id)
+                            .execute();
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnComplete(()->adapter.notifyDataSetChanged())
+                .subscribe();
                 break;
 
         }
