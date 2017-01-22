@@ -59,6 +59,12 @@ public class BookActivity extends AppCompatActivity {
     OrmaListAdapter<Cell> adapter = null;
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        adapter.notifyDataSetChanged();
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_book);
@@ -75,7 +81,6 @@ public class BookActivity extends AppCompatActivity {
 
         ListView lv = (ListView)findViewById(R.id.listView);
 
-
         adapter = new OrmaListAdapter<Cell>(this, orma.relationOfCell().bookEq(book)) {
 
             @Override
@@ -91,13 +96,16 @@ public class BookActivity extends AppCompatActivity {
                 return view;
             }
         };
-
         lv.setAdapter(adapter);
 
         findViewById(R.id.buttonNew).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO: goto new activity.
+                Intent intent = new Intent(BookActivity.this, EditActivity.class);
+                intent.putExtra("BOOK_ID", book.id);
+                startActivity(intent);
+
+                /*
                 Cell cell = new Cell();
                 cell.book = book;
                 cell.cellType = Cell.CELL_TYPE_TEXT;
@@ -106,34 +114,7 @@ public class BookActivity extends AppCompatActivity {
                 orma.prepareInsertIntoCellAsSingle()
                         .subscribeOn(Schedulers.io())
                         .subscribe(x->x.execute(cell));
-
-                /*
-                orma.prepareInsertIntoCell()
-                        .executeAsSingle(cell)
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(x->adapter.notifyDataSetChanged());
                         */
-                // orma.insertIntoCell(cell);
-                /*
-                new Thread(
-                        new Runnable() {
-                            @Override
-                            public void run() {
-                                Cell cell = new Cell();
-                                cell.book = book;
-                                cell.cellType = Cell.CELL_TYPE_TEXT;
-                                cell.source = "This is test.\n Here is another test.";
-
-                                orma.insertIntoCell(cell);
-
-
-                                // should be handler. but this is only test code.
-                                // adapter.notifyDataSetChanged();
-                            }
-                        }
-                ).start();
-                */
             }
         });
 
