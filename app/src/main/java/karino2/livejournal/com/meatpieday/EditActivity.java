@@ -75,11 +75,7 @@ public class EditActivity extends AppCompatActivity {
             return orma.selectFromCell().idEq(cellid).get(0);
         } else {
             Book book = orma.selectFromBook().idEq(bookId).get(0);
-            Cell cell = new Cell();
-            cell.book = book;
-            cell.cellType = Cell.CELL_TYPE_TEXT;
-            cell.source = "";
-            return cell;
+            return BookActivity.createNewCell(orma, book, Cell.CELL_TYPE_TEXT, "");
         }
 
     }

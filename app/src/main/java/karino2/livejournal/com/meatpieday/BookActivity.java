@@ -2,6 +2,7 @@ package karino2.livejournal.com.meatpieday;
 
 import android.content.Intent;
 import android.os.PersistableBundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
@@ -91,48 +92,50 @@ public class BookActivity extends AppCompatActivity {
 
         ListView lv = getListView();
 
-        adapter = new OrmaListAdapter<Cell>(this, orma.relationOfCell().bookEq(book)) {
-
-            @Override
-            public boolean hasStableIds() {
-                return true;
-            }
-
-            @Override
-            public long getItemId(int position) {
-                return this.delegate.getItem(position).id;
-            }
-
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
-                CellView view;
-                if(convertView == null) {
-                    view = (CellView)getLayoutInflater().inflate(R.layout.list_item, null);
-
-                    /*
-                    view.setOnClickListener((v) -> {
-                        CellView cv = (CellView)v;
-                        if(view.isImage()) {
-                            return;
-                        }
-                        Intent intent = new Intent(BookActivity.this, EditActivity.class);
-                        intent.putExtra("BOOK_ID", book.id);
-                        intent.putExtra("CELL_ID", cv.getBoundCell().id);
-                        startActivity(intent);
-                    });
-                    */
-                } else {
-                    view = (CellView)convertView;
-                }
-                Cell cell = getItem(position);
-                view.bindCell(cell);
-                return view;
-            }
-        };
+        adapter = createListAdapter(orma);
         lv.setAdapter(adapter);
 
         lv.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
-        lv.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
+        lv.setMultiChoiceModeListener(createMultiChoiceModeListener());
+
+
+        findViewById(R.id.buttonNew).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(BookActivity.this, EditActivity.class);
+                intent.putExtra("BOOK_ID", book.id);
+                startActivity(intent);
+            }
+        });
+
+
+        findViewById(R.id.buttonNewImage).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Cell cell = createNewCell(orma, Cell.CELL_TYPE_IMAGE, EMPTY_IMAGE_BASE64);
+
+                orma.prepareInsertIntoCellAsSingle()
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(x->x.execute(cell));
+            }
+        });
+
+        findViewById(R.id.buttonDebug).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent();
+                intent.setType("image/png");
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                startActivityForResult(Intent.createChooser(intent, "Select PNG"), REQUEST_IMAGE);
+            }
+        });
+
+    }
+
+    @NonNull
+    private AbsListView.MultiChoiceModeListener createMultiChoiceModeListener() {
+        return new AbsListView.MultiChoiceModeListener() {
             @Override
             public void onItemCheckedStateChanged(ActionMode actionMode, int i, long l, boolean b) {
                 if(getListView().getCheckedItemCount() != 1) {
@@ -181,6 +184,8 @@ public class BookActivity extends AppCompatActivity {
                                     .deleteFromCell()
                                     .idIn(ids)
                                     .execute();
+
+                            // TODO: update viewOrder here.
                         }).subscribeOn(Schedulers.io())
                                 .observeOn(AndroidSchedulers.mainThread())
                                 .subscribe(() -> adapter.notifyDataSetChanged());
@@ -215,55 +220,69 @@ public class BookActivity extends AppCompatActivity {
             public void onDestroyActionMode(ActionMode actionMode) {
 
             }
-        });
+        };
+    }
 
+    @NonNull
+    private OrmaListAdapter<Cell> createListAdapter(final OrmaDatabase orma) {
+        OrmaListAdapter<Cell> tmp;
+        tmp = new OrmaListAdapter<Cell>(this, orma.relationOfCell().bookEq(book).orderByViewOrderAsc()) {
 
-        findViewById(R.id.buttonNew).setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(BookActivity.this, EditActivity.class);
-                intent.putExtra("BOOK_ID", book.id);
-                startActivity(intent);
-
-                /*
-                Cell cell = new Cell();
-                cell.book = book;
-                cell.cellType = Cell.CELL_TYPE_TEXT;
-                cell.source = "This is test.\n Here is another test.";
-
-                orma.prepareInsertIntoCellAsSingle()
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(x->x.execute(cell));
-                        */
+            public boolean hasStableIds() {
+                return true;
             }
-        });
 
-
-        findViewById(R.id.buttonNewImage).setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                Cell cell = new Cell();
-                cell.book = book;
-                cell.cellType = Cell.CELL_TYPE_IMAGE;
-                cell.source = EMPTY_IMAGE_BASE64;
-
-                orma.prepareInsertIntoCellAsSingle()
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(x->x.execute(cell));
+            public long getItemId(int position) {
+                return this.delegate.getItem(position).id;
             }
-        });
 
-        findViewById(R.id.buttonDebug).setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                Intent intent = new Intent();
-                intent.setType("image/png");
-                intent.setAction(Intent.ACTION_GET_CONTENT);
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-                startActivityForResult(Intent.createChooser(intent, "Select PNG"), REQUEST_IMAGE);
-            }
-        });
+            public View getView(int position, View convertView, ViewGroup parent) {
+                CellView view;
+                if(convertView == null) {
+                    view = (CellView)getLayoutInflater().inflate(R.layout.list_item, null);
 
+                    /*
+                    view.setOnClickListener((v) -> {
+                        CellView cv = (CellView)v;
+                        if(view.isImage()) {
+                            return;
+                        }
+                        Intent intent = new Intent(BookActivity.this, EditActivity.class);
+                        intent.putExtra("BOOK_ID", book.id);
+                        intent.putExtra("CELL_ID", cv.getBoundCell().id);
+                        startActivity(intent);
+                    });
+                    */
+                } else {
+                    view = (CellView)convertView;
+                }
+                Cell cell = getItem(position);
+                view.bindCell(cell);
+                return view;
+            }
+        };
+        return tmp;
+    }
+
+    public static Cell createNewCell(OrmaDatabase orma, Book book1, int cellType, String source) {
+        Cell cell = new Cell();
+        cell.book = book1;
+        cell.cellType = cellType;
+        cell.source = source;
+        try {
+            cell.viewOrder = orma.selectFromCell().idEq(book1.id).maxByViewOrder() + 1;
+        }catch(NullPointerException e) {
+            cell.viewOrder = 1; // no cell in this book yet. so assign 1.
+        }
+
+        return cell;
+    }
+
+    Cell createNewCell(OrmaDatabase orma, int cellType, String source) {
+        return createNewCell(orma, book, cellType, source);
     }
 
     private ListView getListView() {
@@ -327,12 +346,10 @@ public class BookActivity extends AppCompatActivity {
             byte[] bytes = IOUtils.toByteArray(stream);
             String png64 = Base64.encodeToString(bytes, Base64.DEFAULT);
 
-            Cell cell = new Cell();
-            cell.book = book;
-            cell.cellType =Cell.CELL_TYPE_IMAGE;
-            cell.source = png64;
 
             OrmaDatabase orma = getOrmaDatabase();
+            Cell cell = createNewCell(orma, Cell.CELL_TYPE_IMAGE, png64);
+
             orma.prepareInsertIntoCellAsSingle()
                     .subscribeOn(Schedulers.io())
                     .subscribe(x -> x.execute(cell));

@@ -22,6 +22,10 @@ public class Cell {
     @Column(indexed = true)
     public Book book;
 
+
+    @Column(indexed = true)
+    public long viewOrder;
+
     @Column
     public int cellType; // 0: text(markdown), 1: image(image output with dummy code).
     // https://ipython.org/ipython-doc/3/notebook/nbformat.html
@@ -30,8 +34,10 @@ public class Cell {
     public String source;
 
 
+
     public static final int CELL_TYPE_TEXT = 0;
     public static final int CELL_TYPE_IMAGE = 1;
+
 
     public void toJson(JsonWriter writer) throws IOException {
         switch(cellType) {

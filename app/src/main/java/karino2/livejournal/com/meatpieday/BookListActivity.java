@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.sqlite.SQLiteConstraintException;
 import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -32,6 +33,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
@@ -76,46 +78,15 @@ public class BookListActivity extends AppCompatActivity {
 
         // temp code.
 
-        if(orma.selectFromBook().execute()
-                .getCount() == 0)
-        {
-            /*
-            Book book = new Book();
-            book.name = "(New Book)";
-            book.createdTime = new Date();
+        try {
+            if (orma.selectFromBook().execute()
+                    .getCount() == 0) {
 
-            orma.relationOfBook()
-                    .inserter()
-                    .execute(book);
-                    */
-
-            // orma.updateBook()
-
-            /*
-                    .name("(New Book)")
-                    .createdTime(new Date())
-                    .execute();
-                    */
-            /*
-            orma.relationOfBook()
-                    .updater()
-                    .
-                    .execute
-            orma.
-            orma.insertIntoBook(book);
-            */
-            
-            createNewBook();
-
-            /*
-            new Thread(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                        }
-                    }
-            ).start();
-            */
+                createNewBook();
+            }
+        }
+        catch(SQLiteConstraintException e) {
+            showMessage("invalid sql table. please clear data from settings: " + e.getMessage());
         }
 
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
