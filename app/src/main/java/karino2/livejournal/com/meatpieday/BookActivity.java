@@ -1,18 +1,19 @@
 package karino2.livejournal.com.meatpieday;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.PersistableBundle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
+import android.view.ActionMode;
 import android.view.ContextMenu;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -23,6 +24,8 @@ import org.apache.commons.io.IOUtils;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -37,7 +40,7 @@ public class BookActivity extends AppCompatActivity {
     final int REQUEST_IMAGE = 1;
 
     void setupBook(long bookid) {
-        OrmaDatabase orma = buildOrmaDatabase();
+        OrmaDatabase orma = getOrmaDatabase();
 
         book = orma.selectFromBook()
                 .idEq(bookid)
@@ -45,7 +48,7 @@ public class BookActivity extends AppCompatActivity {
     }
 
     OrmaDatabase db = null;
-    private OrmaDatabase buildOrmaDatabase() {
+    private OrmaDatabase getOrmaDatabase() {
         if(db == null)
             db = OrmaDatabase.builder(this)
                     .build();
@@ -76,7 +79,7 @@ public class BookActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_book);
 
-        final OrmaDatabase orma = buildOrmaDatabase();
+        final OrmaDatabase orma = getOrmaDatabase();
 
         Intent intent = getIntent();
         if(intent != null) {
@@ -86,15 +89,27 @@ public class BookActivity extends AppCompatActivity {
             setupBook(id);
         }
 
-        ListView lv = (ListView)findViewById(R.id.listView);
+        ListView lv = getListView();
 
         adapter = new OrmaListAdapter<Cell>(this, orma.relationOfCell().bookEq(book)) {
+
+            @Override
+            public boolean hasStableIds() {
+                return true;
+            }
+
+            @Override
+            public long getItemId(int position) {
+                return this.delegate.getItem(position).id;
+            }
 
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 CellView view;
                 if(convertView == null) {
                     view = (CellView)getLayoutInflater().inflate(R.layout.list_item, null);
+
+                    /*
                     view.setOnClickListener((v) -> {
                         CellView cv = (CellView)v;
                         if(view.isImage()) {
@@ -105,6 +120,7 @@ public class BookActivity extends AppCompatActivity {
                         intent.putExtra("CELL_ID", cv.getBoundCell().id);
                         startActivity(intent);
                     });
+                    */
                 } else {
                     view = (CellView)convertView;
                 }
@@ -115,7 +131,92 @@ public class BookActivity extends AppCompatActivity {
         };
         lv.setAdapter(adapter);
 
-        registerForContextMenu(lv);
+        lv.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
+        lv.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
+            @Override
+            public void onItemCheckedStateChanged(ActionMode actionMode, int i, long l, boolean b) {
+                if(getListView().getCheckedItemCount() != 1) {
+                    actionMode.getMenu().findItem(R.id.edit_item).setEnabled(false);
+                } else {
+                    actionMode.getMenu().findItem(R.id.edit_item).setEnabled(true);
+                }
+                /*
+                Cell cell = getOrmaDatabase().selectFromCell().idEq(l).get(0);
+                Menu menu = actionMode.getMenu();
+                menu.findItem()
+                if(cell.cellType == Cell.CELL_TYPE_IMAGE) {
+
+                } else {
+                */
+            }
+
+            @Override
+            public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
+                MenuInflater inflater = actionMode.getMenuInflater();
+                inflater.inflate(R.menu.cell_list_context_menu, menu);
+
+                return true;
+            }
+
+            @Override
+            public boolean onPrepareActionMode(ActionMode actionMode, Menu menu) {
+                return false;
+            }
+
+            @Override
+            public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
+
+
+                switch(menuItem.getItemId()) {
+                    case R.id.delete_item:
+                        long[] cellids = getListView().getCheckedItemIds();
+                        ArrayList<Long> ids = new ArrayList<Long>();
+                        for(long id : cellids)
+                        {
+                            ids.add(id);
+                        }
+
+                        Completable.fromAction(()-> {
+                            getOrmaDatabase()
+                                    .deleteFromCell()
+                                    .idIn(ids)
+                                    .execute();
+                        }).subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(() -> adapter.notifyDataSetChanged());
+
+                        actionMode.finish();
+                        return true;
+                    case R.id.edit_item:
+
+                        long cellid = getListView().getCheckedItemIds()[0];
+                        Cell cell = getOrmaDatabase().selectFromCell().idEq(cellid).get(0);
+
+                        if(cell.cellType == Cell.CELL_TYPE_IMAGE) {
+                            getSharedPreferences("state", MODE_PRIVATE)
+                                    .edit()
+                                    .putLong("WAIT_IMAGE_ID", cellid)
+                                    .commit();
+
+                            showMessage("Send image to this app, then replace selected image.");
+                        } else {
+                            Intent intent = new Intent(BookActivity.this, EditActivity.class);
+                            intent.putExtra("BOOK_ID", book.id);
+                            intent.putExtra("CELL_ID", cellid);
+                            startActivity(intent);
+                        }
+                        actionMode.finish();
+                        return true;
+                }
+                return false;
+            }
+
+            @Override
+            public void onDestroyActionMode(ActionMode actionMode) {
+
+            }
+        });
+
 
         findViewById(R.id.buttonNew).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -165,26 +266,21 @@ public class BookActivity extends AppCompatActivity {
 
     }
 
-    @Override
-    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-        super.onCreateContextMenu(menu, v, menuInfo);
-
-        if(((CellView)  ((AdapterView.AdapterContextMenuInfo)menuInfo).targetView).isImage()) {
-            menu.add(Menu.NONE, R.id.edit_image_item, Menu.NONE, "edit");
-        }
-        menu.add(Menu.NONE, R.id.delete_item, Menu.NONE, "delete");
+    private ListView getListView() {
+        return (ListView)findViewById(R.id.listView);
     }
 
     void showMessage(String msg) {
         Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
     }
 
+    /*
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
         Cell cell = ((CellView)info.targetView).getBoundCell();
         switch(item.getItemId()) {
-            case R.id.edit_image_item:
+            case R.id.edit_item:
                 getSharedPreferences("state", MODE_PRIVATE)
                         .edit()
                         .putLong("WAIT_IMAGE_ID", cell.id)
@@ -194,7 +290,7 @@ public class BookActivity extends AppCompatActivity {
                 break;
             case R.id.delete_item:
                 Completable.fromAction(()-> {
-                    buildOrmaDatabase()
+                    getOrmaDatabase()
                             .deleteFromCell()
                             .idEq(cell.id)
                             .execute();
@@ -209,6 +305,7 @@ public class BookActivity extends AppCompatActivity {
 
         return super.onContextItemSelected(item);
     }
+    */
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -235,7 +332,7 @@ public class BookActivity extends AppCompatActivity {
             cell.cellType =Cell.CELL_TYPE_IMAGE;
             cell.source = png64;
 
-            OrmaDatabase orma = buildOrmaDatabase();
+            OrmaDatabase orma = getOrmaDatabase();
             orma.prepareInsertIntoCellAsSingle()
                     .subscribeOn(Schedulers.io())
                     .subscribe(x -> x.execute(cell));
