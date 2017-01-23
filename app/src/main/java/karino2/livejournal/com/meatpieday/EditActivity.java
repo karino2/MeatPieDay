@@ -14,9 +14,12 @@ import io.reactivex.schedulers.Schedulers;
 public class EditActivity extends AppCompatActivity {
 
     long bookId = -1;
+    long cellId = -1;
+
     @Override
     public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
         outState.putLong("BOOK_ID", bookId);
+        outState.putLong("CELL_ID", cellId);
         super.onSaveInstanceState(outState, outPersistentState);
     }
 
@@ -24,6 +27,7 @@ public class EditActivity extends AppCompatActivity {
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         bookId = savedInstanceState.getLong("BOOK_ID");
+        cellId = savedInstanceState.getLong("CELL_ID");
     }
 
 
@@ -34,9 +38,13 @@ public class EditActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         if(intent != null) {
-            bookId = getIntent().getLongExtra("BOOK_ID", -1);
+            bookId = intent.getLongExtra("BOOK_ID", -1);
             if(bookId == -1)
                 throw new RuntimeException("No book ID.");
+
+            cellId = intent.getLongExtra("CELL_ID", -1);
+            EditText et = (EditText)findViewById(R.id.editText);
+            et.setText(getCell(cellId).source);
         }
 
 
@@ -59,6 +67,23 @@ public class EditActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    Cell getCell(long cellid) {
+        OrmaDatabase orma = OrmaDatabase.builder(this)
+                .build();
+
+        if(cellid != -1) {
+            return orma.selectFromCell().idEq(cellid).get(0);
+        } else {
+            Book book = orma.selectFromBook().idEq(bookId).get(0);
+            Cell cell = new Cell();
+            cell.book = book;
+            cell.cellType = Cell.CELL_TYPE_TEXT;
+            cell.source = "";
+            return cell;
+        }
+
+    }
+
     private void saveMarkdown() {
         OrmaDatabase orma = OrmaDatabase.builder(this)
                 .build();
@@ -68,12 +93,15 @@ public class EditActivity extends AppCompatActivity {
         orma.transactionAsCompletable( () -> {
             Book book = orma.selectFromBook().idEq(bookId).get(0);
 
-            Cell cell = new Cell();
-            cell.book = book;
-            cell.cellType = Cell.CELL_TYPE_TEXT;
-            cell.source = text;
 
-            orma.insertIntoCell(cell);
+            if(cellId != -1) {
+                orma.updateCell().idEq(cellId).source(text).execute();
+            } else {
+                Cell cell = getCell(cellId);
+                cell.source = text;
+
+                orma.insertIntoCell(cell);
+            }
 
         }).subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())

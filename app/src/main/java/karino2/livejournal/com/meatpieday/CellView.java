@@ -1,6 +1,7 @@
 package karino2.livejournal.com.meatpieday;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
