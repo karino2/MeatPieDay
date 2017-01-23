@@ -1,6 +1,7 @@
 package karino2.livejournal.com.meatpieday;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
@@ -99,6 +100,13 @@ public class BookActivity extends AppCompatActivity {
         lv.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
         lv.setMultiChoiceModeListener(createMultiChoiceModeListener());
 
+        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                CellView cv = (CellView)view;
+                handleEditCell(cv.getBoundCell());
+            }
+        });
 
         findViewById(R.id.buttonNew).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -206,19 +214,7 @@ public class BookActivity extends AppCompatActivity {
 
                         Cell cell = getSelectedCell();
 
-                        if (cell.cellType == Cell.CELL_TYPE_IMAGE) {
-                            getSharedPreferences("state", MODE_PRIVATE)
-                                    .edit()
-                                    .putLong("WAIT_IMAGE_ID", cell.id)
-                                    .commit();
-
-                            showMessage("Send image to this app, then replace selected image.");
-                        } else {
-                            Intent intent = new Intent(BookActivity.this, EditActivity.class);
-                            intent.putExtra("BOOK_ID", book.id);
-                            intent.putExtra("CELL_ID", cell.id);
-                            startActivity(intent);
-                        }
+                        handleEditCell(cell);
                         actionMode.finish();
                         return true;
                     }
@@ -231,6 +227,31 @@ public class BookActivity extends AppCompatActivity {
 
             }
         };
+    }
+
+    private void handleEditCell(Cell cell) {
+        if (cell.cellType == Cell.CELL_TYPE_IMAGE) {
+
+            SharedPreferences prefs = getSharedPreferences("state", MODE_PRIVATE);
+
+            if (prefs.getLong("WAIT_IMAGE_ID", -1) == cell.id) {
+                prefs.edit()
+                    .putLong("WAIT_IMAGE_ID", -1)
+                    .commit();
+
+                showMessage("Cancel wait image.");
+            }else {
+                prefs.edit()
+                    .putLong("WAIT_IMAGE_ID", cell.id)
+                    .commit();
+                showMessage("Send image to this app, then replace selected image.");
+            }
+        } else {
+            Intent intent = new Intent(BookActivity.this, EditActivity.class);
+            intent.putExtra("BOOK_ID", book.id);
+            intent.putExtra("CELL_ID", cell.id);
+            startActivity(intent);
+        }
     }
 
     private void moveCellViewOrderAfter(long startViewOrder) {
@@ -354,7 +375,7 @@ public class BookActivity extends AppCompatActivity {
         cell.cellType = cellType;
         cell.source = source;
         try {
-            cell.viewOrder = orma.selectFromCell().idEq(book1.id).maxByViewOrder() + 1;
+            cell.viewOrder = orma.selectFromCell().bookEq(book1).maxByViewOrder() + 1;
         }catch(NullPointerException e) {
             cell.viewOrder = 1; // no cell in this book yet. so assign 1.
         }
