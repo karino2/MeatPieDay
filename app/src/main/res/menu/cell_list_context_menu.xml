@@ -8,4 +8,6 @@
     <item android:title="delete" android:id="@+id/delete_item"
         android:icon="@android:drawable/ic_delete"
         />
+    <item android:title="insert md" android:id="@+id/insert_markdown_item" />
+    <item android:title="insert img" android:id="@+id/insert_image_item" />
 </menu>

@@ -1,6 +1,7 @@
 package karino2.livejournal.com.meatpieday;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -139,18 +140,14 @@ public class BookActivity extends AppCompatActivity {
             @Override
             public void onItemCheckedStateChanged(ActionMode actionMode, int i, long l, boolean b) {
                 if(getListView().getCheckedItemCount() != 1) {
-                    actionMode.getMenu().findItem(R.id.edit_item).setEnabled(false);
+                    actionMode.getMenu().findItem(R.id.edit_item).setVisible(false);
+                    actionMode.getMenu().findItem(R.id.insert_image_item).setVisible(false);
+                    actionMode.getMenu().findItem(R.id.insert_markdown_item).setVisible(false);
                 } else {
-                    actionMode.getMenu().findItem(R.id.edit_item).setEnabled(true);
+                    actionMode.getMenu().findItem(R.id.edit_item).setVisible(true);
+                    actionMode.getMenu().findItem(R.id.insert_image_item).setVisible(true);
+                    actionMode.getMenu().findItem(R.id.insert_markdown_item).setVisible(true);
                 }
-                /*
-                Cell cell = getOrmaDatabase().selectFromCell().idEq(l).get(0);
-                Menu menu = actionMode.getMenu();
-                menu.findItem()
-                if(cell.cellType == Cell.CELL_TYPE_IMAGE) {
-
-                } else {
-                */
             }
 
             @Override
@@ -168,7 +165,6 @@ public class BookActivity extends AppCompatActivity {
 
             @Override
             public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
-
 
                 switch(menuItem.getItemId()) {
                     case R.id.delete_item:
@@ -192,26 +188,40 @@ public class BookActivity extends AppCompatActivity {
 
                         actionMode.finish();
                         return true;
-                    case R.id.edit_item:
+                    case R.id.insert_image_item:{
+                        Cell cell = getSelectedCell();
+                        insertNewImageAbove(cell);
 
-                        long cellid = getListView().getCheckedItemIds()[0];
-                        Cell cell = getOrmaDatabase().selectFromCell().idEq(cellid).get(0);
+                        actionMode.finish();
+                        return true;
+                    }
+                    case R.id.insert_markdown_item: {
+                        Cell cell = getSelectedCell();
+                        insertNewMarkdownAbove(cell);
 
-                        if(cell.cellType == Cell.CELL_TYPE_IMAGE) {
+                        actionMode.finish();
+                        return true;
+                    }
+                    case R.id.edit_item: {
+
+                        Cell cell = getSelectedCell();
+
+                        if (cell.cellType == Cell.CELL_TYPE_IMAGE) {
                             getSharedPreferences("state", MODE_PRIVATE)
                                     .edit()
-                                    .putLong("WAIT_IMAGE_ID", cellid)
+                                    .putLong("WAIT_IMAGE_ID", cell.id)
                                     .commit();
 
                             showMessage("Send image to this app, then replace selected image.");
                         } else {
                             Intent intent = new Intent(BookActivity.this, EditActivity.class);
                             intent.putExtra("BOOK_ID", book.id);
-                            intent.putExtra("CELL_ID", cellid);
+                            intent.putExtra("CELL_ID", cell.id);
                             startActivity(intent);
                         }
                         actionMode.finish();
                         return true;
+                    }
                 }
                 return false;
             }
@@ -221,6 +231,77 @@ public class BookActivity extends AppCompatActivity {
 
             }
         };
+    }
+
+    private void moveCellViewOrderAfter(long startViewOrder) {
+        OrmaDatabase orma = getOrmaDatabase();
+        Cell_Schema schema = Cell_Schema.INSTANCE;
+        Cursor cursor = orma.selectFromCell().bookEq(book).viewOrderGe(startViewOrder)
+                .executeWithColumns(schema.id.getQualifiedName(), schema.viewOrder.getQualifiedName());
+
+
+        ArrayList<long[]> idViewOrderParis = new ArrayList<>();
+
+        try {
+            if(!cursor.moveToFirst())
+                return;
+
+
+            int idIndex = cursor.getColumnIndex(schema.id.name);
+            int viewOrderIndex = cursor.getColumnIndex(schema.viewOrder.name);
+
+            do {
+                 long[] pair  = new long[]{
+                  cursor.getLong(idIndex),
+                         cursor.getLong(viewOrderIndex)
+                };
+                idViewOrderParis.add(pair);
+            }while(cursor.moveToNext());
+        }
+        finally {
+            cursor.close();
+        }
+
+        for(long[] pair : idViewOrderParis) {
+            orma.updateCell()
+                    .idEq(pair[0])
+                    .viewOrder(pair[1]+1)
+                    .execute();
+        }
+
+    }
+    private void insertCellAbove(Cell below, int cellType, String source) {
+        Cell cell = new Cell();
+        cell.book = book;
+        cell.cellType = cellType;
+        cell.source = source;
+        cell.viewOrder = below.viewOrder;
+
+        OrmaDatabase orma = getOrmaDatabase();
+        orma.transactionAsCompletable(
+                ()-> {
+                    moveCellViewOrderAfter(cell.viewOrder);
+                    orma.insertIntoCell(cell);
+                }
+        ).subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(()->adapter.notifyDataSetChanged());
+    }
+
+    private void insertNewMarkdownAbove(Cell target) {
+        insertCellAbove(target, Cell.CELL_TYPE_TEXT, "(empty)");
+
+    }
+    private void insertNewImageAbove(Cell target) {
+        insertCellAbove(target, Cell.CELL_TYPE_IMAGE, EMPTY_IMAGE_BASE64);
+    }
+
+
+
+    @NonNull
+    private Cell getSelectedCell() {
+        long cellid = getListView().getCheckedItemIds()[0];
+        return getOrmaDatabase().selectFromCell().idEq(cellid).get(0);
     }
 
     @NonNull
