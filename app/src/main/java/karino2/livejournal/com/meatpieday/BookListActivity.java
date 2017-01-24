@@ -66,7 +66,7 @@ public class BookListActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-    OrmaListAdapter<Book> adapter;
+    RelodableOrmaListAdapter<Book> adapter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -100,7 +100,7 @@ public class BookListActivity extends AppCompatActivity {
         });
 
 
-        adapter = new OrmaListAdapter<Book>(this, orma.relationOfBook()) {
+        adapter = new RelodableOrmaListAdapter<Book>(this, orma.relationOfBook()) {
 
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
@@ -134,7 +134,7 @@ public class BookListActivity extends AppCompatActivity {
                 })
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe((inserter) -> {
-                    adapter.notifyDataSetChanged();
+                    adapter.reload();
                     /*
                     inserter.executeAsSingle(book)
                             .observeOn(AndroidSchedulers.mainThread())
@@ -277,7 +277,7 @@ public class BookListActivity extends AppCompatActivity {
                 })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnComplete(()->adapter.notifyDataSetChanged())
+                .doOnComplete(()->adapter.reload())
                 .subscribe();
                 break;
 
@@ -320,7 +320,7 @@ public class BookListActivity extends AppCompatActivity {
                                         .executeAsSingle()
                                         .subscribeOn(Schedulers.io())
                                         .observeOn(AndroidSchedulers.mainThread())
-                                        .subscribe(x->adapter.notifyDataSetChanged());
+                                        .subscribe(x->adapter.reload());
 
                                         // .subscribe(x->adapter.notifyDataSetInvalidated());
                                         // seems not working. but add here anyway.

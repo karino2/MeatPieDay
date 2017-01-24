@@ -1,5 +1,6 @@
 package karino2.livejournal.com.meatpieday;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -9,7 +10,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
 import android.view.ActionMode;
-import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -20,7 +20,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.github.gfx.android.orma.widget.OrmaListAdapter;
+import com.github.gfx.android.orma.Relation;
 
 import org.apache.commons.io.IOUtils;
 
@@ -28,7 +28,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -69,12 +68,12 @@ public class BookActivity extends AppCompatActivity {
         super.onRestoreInstanceState(savedInstanceState);
         setupBook(savedInstanceState.getLong("BOOK_ID"));
     }
-    OrmaListAdapter<Cell> adapter = null;
+    MyOrmaListAdapter<Cell> adapter = null;
 
     @Override
     protected void onStart() {
         super.onStart();
-        adapter.notifyDataSetChanged();
+        adapter.reload();
     }
 
     @Override
@@ -192,7 +191,7 @@ public class BookActivity extends AppCompatActivity {
                             // TODO: update viewOrder here.
                         }).subscribeOn(Schedulers.io())
                                 .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe(() -> adapter.notifyDataSetChanged());
+                                .subscribe(() -> adapter.reload());
 
                         actionMode.finish();
                         return true;
@@ -306,7 +305,7 @@ public class BookActivity extends AppCompatActivity {
                 }
         ).subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(()->adapter.notifyDataSetChanged());
+                .subscribe(()->adapter.reload());
     }
 
     private void insertNewMarkdownAbove(Cell target) {
@@ -325,26 +324,28 @@ public class BookActivity extends AppCompatActivity {
         return getOrmaDatabase().selectFromCell().idEq(cellid).get(0);
     }
 
-    @NonNull
-    private OrmaListAdapter<Cell> createListAdapter(final OrmaDatabase orma) {
-        OrmaListAdapter<Cell> tmp;
-        tmp = new OrmaListAdapter<Cell>(this, orma.relationOfCell().bookEq(book).orderByViewOrderAsc()) {
+    class MyOrmaListAdapter<CellModel extends Cell> extends  RelodableOrmaListAdapter<CellModel> {
 
-            @Override
-            public boolean hasStableIds() {
-                return true;
-            }
+        public MyOrmaListAdapter(@NonNull Context context, @NonNull Relation<CellModel, ?> relation) {
+            super(context, relation);
+        }
 
-            @Override
-            public long getItemId(int position) {
-                return this.delegate.getItem(position).id;
-            }
 
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
-                CellView view;
-                if(convertView == null) {
-                    view = (CellView)getLayoutInflater().inflate(R.layout.list_item, null);
+        @Override
+        public boolean hasStableIds() {
+            return true;
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return this.delegate.getItem(position).id;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            CellView view;
+            if(convertView == null) {
+                view = (CellView)getLayoutInflater().inflate(R.layout.list_item, null);
 
                     /*
                     view.setOnClickListener((v) -> {
@@ -358,14 +359,19 @@ public class BookActivity extends AppCompatActivity {
                         startActivity(intent);
                     });
                     */
-                } else {
-                    view = (CellView)convertView;
-                }
-                Cell cell = getItem(position);
-                view.bindCell(cell);
-                return view;
+            } else {
+                view = (CellView)convertView;
             }
-        };
+            CellModel cell = getItem(position);
+            view.bindCell(cell);
+            return view;
+        }
+    }
+
+    @NonNull
+    private MyOrmaListAdapter<Cell> createListAdapter(final OrmaDatabase orma) {
+        MyOrmaListAdapter<Cell> tmp;
+        tmp = new MyOrmaListAdapter(this, orma.relationOfCell().bookEq(book).orderByViewOrderAsc());
         return tmp;
     }
 
