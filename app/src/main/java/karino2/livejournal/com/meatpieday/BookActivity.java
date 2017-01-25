@@ -370,9 +370,7 @@ public class BookActivity extends AppCompatActivity {
 
     @NonNull
     private MyOrmaListAdapter<Cell> createListAdapter(final OrmaDatabase orma) {
-        MyOrmaListAdapter<Cell> tmp;
-        tmp = new MyOrmaListAdapter(this, orma.relationOfCell().bookEq(book).orderByViewOrderAsc());
-        return tmp;
+        return new MyOrmaListAdapter(this, orma.relationOfCell().bookEq(book).orderByViewOrderAsc());
     }
 
     public static Cell createNewCell(OrmaDatabase orma, Book book1, int cellType, String source) {

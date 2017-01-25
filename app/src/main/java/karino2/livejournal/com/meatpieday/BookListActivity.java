@@ -170,6 +170,7 @@ public class BookListActivity extends AppCompatActivity {
             writer.beginArray();
             getOrmaDatabase().selectFromCell()
                     .bookEq(target)
+                    .orderByViewOrderAsc()
                     .executeAsObservable()
                     .subscribe(cell -> {
                        cell.toJson(writer);
