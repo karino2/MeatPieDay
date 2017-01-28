@@ -2,6 +2,7 @@ package karino2.livejournal.com.meatpieday;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.sqlite.SQLiteConstraintException;
@@ -133,15 +134,7 @@ public class BookListActivity extends AppCompatActivity {
                     inserter.execute(book);
                 })
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe((inserter) -> {
-                    adapter.reload();
-                    /*
-                    inserter.executeAsSingle(book)
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(()->adapter.notifyDataSetChanged())
-                            */
-
-                });
+                .subscribe();
     }
 
     @Override
@@ -277,8 +270,6 @@ public class BookListActivity extends AppCompatActivity {
                             .execute();
                 })
                 .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnComplete(()->adapter.reload())
                 .subscribe();
                 break;
 
@@ -320,17 +311,7 @@ public class BookListActivity extends AppCompatActivity {
                                         .name(newBookName)
                                         .executeAsSingle()
                                         .subscribeOn(Schedulers.io())
-                                        .observeOn(AndroidSchedulers.mainThread())
-                                        .subscribe(x->adapter.reload());
-
-                                        // .subscribe(x->adapter.notifyDataSetInvalidated());
-                                        // seems not working. but add here anyway.
-                                        // not working either
-                                        // .subscribe(x->adapter.notifyDataSetChanged());
-
-
-                                // database.renameBook(bookId, newBookName);
-                                // cursor.requery();
+                                        .subscribe();
                             }
                         })
                         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -342,8 +323,19 @@ public class BookListActivity extends AppCompatActivity {
         return super.onCreateDialog(id, args);
     }
 
-    private OrmaDatabase getOrmaDatabase() {
-        return OrmaDatabase.builder(this)
+    static OrmaDatabase ormaDatabase;
+
+    public static OrmaDatabase getOrmaDatabaseInstance(Context ctx) {
+        if(ormaDatabase == null) {
+            ormaDatabase = OrmaDatabase.builder(ctx)
                     .build();
+        }
+        return ormaDatabase;
+
     }
+
+    private OrmaDatabase getOrmaDatabase() {
+        return getOrmaDatabaseInstance(this);
+    }
+
 }

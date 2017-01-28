@@ -52,8 +52,7 @@ public class BookActivity extends AppCompatActivity {
     OrmaDatabase db = null;
     private OrmaDatabase getOrmaDatabase() {
         if(db == null)
-            db = OrmaDatabase.builder(this)
-                    .build();
+            db = BookListActivity.getOrmaDatabaseInstance(this);
         return db;
     }
 
@@ -70,11 +69,6 @@ public class BookActivity extends AppCompatActivity {
     }
     MyOrmaListAdapter<Cell> adapter = null;
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        adapter.reload();
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -190,8 +184,7 @@ public class BookActivity extends AppCompatActivity {
 
                             // TODO: update viewOrder here.
                         }).subscribeOn(Schedulers.io())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe(() -> adapter.reload());
+                                .subscribe();
 
                         actionMode.finish();
                         return true;
@@ -304,8 +297,7 @@ public class BookActivity extends AppCompatActivity {
                     orma.insertIntoCell(cell);
                 }
         ).subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(()->adapter.reload());
+                .subscribe();
     }
 
     private void insertNewMarkdownAbove(Cell target) {

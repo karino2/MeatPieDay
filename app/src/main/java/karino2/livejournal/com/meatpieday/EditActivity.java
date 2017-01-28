@@ -68,8 +68,7 @@ public class EditActivity extends AppCompatActivity {
     }
 
     Cell getCell(long cellid) {
-        OrmaDatabase orma = OrmaDatabase.builder(this)
-                .build();
+        OrmaDatabase orma = BookListActivity.getOrmaDatabaseInstance(this);
 
         if(cellid != -1) {
             return orma.selectFromCell().idEq(cellid).get(0);
@@ -81,8 +80,7 @@ public class EditActivity extends AppCompatActivity {
     }
 
     private void saveMarkdown() {
-        OrmaDatabase orma = OrmaDatabase.builder(this)
-                .build();
+        OrmaDatabase orma = BookListActivity.getOrmaDatabaseInstance(this);
 
         String text = ((EditText)findViewById(R.id.editText)).getText().toString();
 
