@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.sqlite.SQLiteConstraintException;
+import android.net.Uri;
 import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -27,6 +28,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
@@ -93,7 +95,7 @@ public class BookListActivity extends AppCompatActivity {
         });
 
 
-        adapter = new RelodableOrmaListAdapter<Book>(this, orma.relationOfBook()) {
+        adapter = new RelodableOrmaListAdapter<Book>(this, orma.relationOfBook().orderByCreatedTimeDesc()) {
 
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
@@ -134,6 +136,7 @@ public class BookListActivity extends AppCompatActivity {
         super.onCreateContextMenu(menu, v, menuInfo);
         menu.add(Menu.NONE, R.id.rename_book_item, Menu.NONE, "rename");
         menu.add(Menu.NONE, R.id.export_book_item, Menu.NONE, "export");
+        menu.add(Menu.NONE, R.id.share_book_item, Menu.NONE, "share");
         menu.add(Menu.NONE, R.id.delete_book_item, Menu.NONE, "delete");
     }
 
@@ -174,7 +177,13 @@ public class BookListActivity extends AppCompatActivity {
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(x->showMessage("export done"));
                 break;
-
+            case R.id.share_book_item:
+                Single.fromCallable(() -> exportBookForShare(book))
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(f ->
+                        sendTo(f));
+                break;
             case R.id.delete_book_item:
                 OrmaDatabase orma = getOrmaDatabase();
                 orma.transactionAsCompletable( () -> {
@@ -191,6 +200,19 @@ public class BookListActivity extends AppCompatActivity {
 
         }
         return super.onContextItemSelected(item);
+    }
+
+    private void sendTo(File exported) {
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("application/x-ipynb+json");
+        intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(exported));
+        startActivity(intent);
+    }
+
+    private File exportBookForShare(Book book) throws IOException {
+        Exporter exporter = new Exporter();
+
+        return  exporter.exportBookForShare(getOrmaDatabase(), book);
     }
 
     @Override

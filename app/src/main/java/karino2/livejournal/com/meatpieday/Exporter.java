@@ -1,6 +1,7 @@
 package karino2.livejournal.com.meatpieday;
 
 import android.os.Environment;
+import android.support.annotation.NonNull;
 
 import com.google.gson.stream.JsonWriter;
 
@@ -15,7 +16,7 @@ import java.util.Date;
  */
 
 public class Exporter {
-    String folderName;
+    String folderName = "MeatPieDay";
 
     public static void ensureDirExist(File dir) throws IOException {
         if(!dir.exists()) {
@@ -25,13 +26,35 @@ public class Exporter {
         }
     }
 
-    public File exportBook(OrmaDatabase orma, Book target) throws IOException {
-        SimpleDateFormat timeStampFormat = new SimpleDateFormat("yyyyMMdd_HHmmssSS");
-        String filename = timeStampFormat.format(new Date()) + "_" + target.name + ".ipynb";
-        File file = new File(Environment.getExternalStorageDirectory(), filename);
+    File getStoreDirectory() throws IOException {
+        File dir = new File(Environment.getExternalStorageDirectory(), folderName);
+        ensureDirExist(dir);
+        return dir;
+    }
+
+    public File exportBookForShare(OrmaDatabase orma, Book target) throws IOException {
+        String filename = createFileName(target);
+        File shareDir = new File(getStoreDirectory(), "share_tmp");
+        ensureDirExist(shareDir);
+
+        File file = new File(shareDir, filename);
 
         saveBookToFile(orma, file, target);
         return file;
+    }
+
+    public File exportBook(OrmaDatabase orma, Book target) throws IOException {
+        String filename = createFileName(target);
+        File file = new File(getStoreDirectory(), filename);
+
+        saveBookToFile(orma, file, target);
+        return file;
+    }
+
+    @NonNull
+    private String createFileName(Book target) {
+        SimpleDateFormat timeStampFormat = new SimpleDateFormat("yyyyMMdd_HHmmssSS");
+        return timeStampFormat.format(new Date()) + "_" + target.name + ".ipynb";
     }
 
 
