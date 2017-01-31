@@ -161,9 +161,8 @@ public class BookListActivity extends AppCompatActivity {
 
             writer.name("cells");
             writer.beginArray();
-            getOrmaDatabase().selectFromCell()
-                    .bookEq(target)
-                    .orderByViewOrderAsc()
+            BookActivity.getCellRelation(getOrmaDatabase(), target)
+                    .selector()
                     .executeAsObservable()
                     .subscribe(cell -> {
                        cell.toJson(writer);
