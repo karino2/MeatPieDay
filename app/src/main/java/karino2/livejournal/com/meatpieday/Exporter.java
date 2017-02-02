@@ -33,11 +33,10 @@ public class Exporter {
     }
 
     public File exportBookForShare(OrmaDatabase orma, Book target) throws IOException {
-        String filename = createFileName(target);
         File shareDir = new File(getStoreDirectory(), "share_tmp");
         ensureDirExist(shareDir);
 
-        File file = new File(shareDir, filename);
+        File file = new File(shareDir,  target.name + ".ipynb");
 
         saveBookToFile(orma, file, target);
         return file;
