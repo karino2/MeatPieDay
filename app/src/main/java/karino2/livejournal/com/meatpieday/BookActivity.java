@@ -78,11 +78,14 @@ public class BookActivity extends AppCompatActivity {
             if(id == -1)
                 throw new RuntimeException("No book ID.");
             setupBook(id);
+            getPrefs().edit()
+                    .putLong("BOOK_ID", id)
+                    .commit();
         }
 
         ListView lv = getListView();
 
-        adapter = createListAdapter(orma);
+        adapter = (CellListAdapter<Cell>) CellListAdapter.create(this, orma, book);
         lv.setAdapter(adapter);
 
         lv.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
@@ -218,27 +221,17 @@ public class BookActivity extends AppCompatActivity {
 
     private void handleEditCell(Cell cell) {
         if (cell.cellType == Cell.CELL_TYPE_IMAGE) {
-
-            SharedPreferences prefs = getSharedPreferences("state", MODE_PRIVATE);
-
-            if (prefs.getLong("WAIT_IMAGE_ID", -1) == cell.id) {
-                prefs.edit()
-                    .putLong("WAIT_IMAGE_ID", -1)
-                    .commit();
-
-                showMessage("Cancel wait image.");
-            }else {
-                prefs.edit()
-                    .putLong("WAIT_IMAGE_ID", cell.id)
-                    .commit();
-                showMessage("Send image to this app, then replace selected image.");
-            }
+            showMessage("NYI: image view mode.");
         } else {
             Intent intent = new Intent(BookActivity.this, EditActivity.class);
             intent.putExtra("BOOK_ID", book.id);
             intent.putExtra("CELL_ID", cell.id);
             startActivity(intent);
         }
+    }
+
+    private SharedPreferences getPrefs() {
+        return getSharedPreferences("state", MODE_PRIVATE);
     }
 
     private void moveCellViewOrderAfter(long startViewOrder) {
@@ -309,11 +302,6 @@ public class BookActivity extends AppCompatActivity {
     private Cell getSelectedCell() {
         long cellid = getListView().getCheckedItemIds()[0];
         return getOrmaDatabase().selectFromCell().idEq(cellid).get(0);
-    }
-
-    @NonNull
-    private CellListAdapter<Cell> createListAdapter(final OrmaDatabase orma) {
-        return CellListAdapter.create(this, orma, book);
     }
 
     public static Cell createNewCell(OrmaDatabase orma, Book book1, int cellType, String source) {
