@@ -32,10 +32,6 @@ public class BookActivity extends AppCompatActivity {
 
     Book book;
 
-
-    // temp code.
-    final int REQUEST_IMAGE = 1;
-
     void setupBook(long bookid) {
         OrmaDatabase orma = getOrmaDatabase();
 
@@ -109,27 +105,6 @@ public class BookActivity extends AppCompatActivity {
         });
 
 
-        findViewById(R.id.buttonNewImage).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Cell cell = createNewCell(orma, Cell.CELL_TYPE_IMAGE, EMPTY_IMAGE_BASE64);
-
-                orma.prepareInsertIntoCellAsSingle()
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(x->x.execute(cell));
-            }
-        });
-
-        findViewById(R.id.buttonDebug).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent();
-                intent.setType("image/png");
-                intent.setAction(Intent.ACTION_GET_CONTENT);
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-                startActivityForResult(Intent.createChooser(intent, "Select PNG"), REQUEST_IMAGE);
-            }
-        });
 
     }
 
@@ -318,10 +293,6 @@ public class BookActivity extends AppCompatActivity {
         return cell;
     }
 
-    Cell createNewCell(OrmaDatabase orma, int cellType, String source) {
-        return createNewCell(orma, book, cellType, source);
-    }
-
     private ListView getListView() {
         return (ListView)findViewById(R.id.listView);
     }
@@ -331,54 +302,6 @@ public class BookActivity extends AppCompatActivity {
     }
 
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if(resultCode == RESULT_OK) {
-            if(requestCode == REQUEST_IMAGE) {
-                handleReceiveImage(data);
-
-                return;
-            }
-        }
-    }
-
-    private void handleReceiveImage(Intent data) {
-        InputStream stream = null;
-        try {
-            stream = getContentResolver().openInputStream(data.getData());
-
-            byte[] bytes = IOUtils.toByteArray(stream);
-            String png64 = Base64.encodeToString(bytes, Base64.DEFAULT);
-
-
-            OrmaDatabase orma = getOrmaDatabase();
-            Cell cell = createNewCell(orma, Cell.CELL_TYPE_IMAGE, png64);
-
-            orma.prepareInsertIntoCellAsSingle()
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(x -> x.execute(cell));
-
-            /*
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(x->adapter.notifyDataSetChanged());
-                    */
-
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if(stream != null){
-                try {
-                    stream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
 
     final String EMPTY_IMAGE_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAoAAAADICAYAAAB4WVALAAAABHNCSVQICAgIfAhkiAAAA75JREFUeJzt1jEBwCAAwDDAvy ZkYAdcbEcTBT079z13AACQsf4OAADgWwYQACDGAAIAxBhAAIAYAwgAEGMAAQBiDCAAQIwBBACIMYAAADEGEAAgxgACAMQY QACAGAMIABBjAAEAYgwgAECMAQQAiDGAAAAxBhAAIMYAAgDEGEAAgBgDCAAQYwABAGIMIABAjAEEAIgxgAAAMQYQACDGAA IAxBhAAIAYAwgAEGMAAQBiDCAAQIwBBACIMYAAADEGEAAgxgACAMQYQACAGAMIABBjAAEAYgwgAECMAQQAiDGAAAAxBhAA IMYAAgDEGEAAgBgDCAAQYwABAGIMIABAjAEEAIgxgAAAMQYQACDGAAIAxBhAAIAYAwgAEGMAAQBiDCAAQIwBBACIMYAAAD EGEAAgxgACAMQYQACAGAMIABBjAAEAYgwgAECMAQQAiDGAAAAxBhAAIMYAAgDEGEAAgBgDCAAQYwABAGIMIABAjAEEAIgx gAAAMQYQACDGAAIAxBhAAIAYAwgAEGMAAQBiDCAAQIwBBACIMYAAADEGEAAgxgACAMQYQACAGAMIABBjAAEAYgwgAECMAQ QAiDGAAAAxBhAAIMYAAgDEGEAAgBgDCAAQYwABAGIMIABAjAEEAIgxgAAAMQYQACDGAAIAxBhAAIAYAwgAEGMAAQBiDCAA QIwBBACIMYAAADEGEAAgxgACAMQYQACAGAMIABBjAAEAYgwgAECMAQQAiDGAAAAxBhAAIMYAAgDEGEAAgBgDCAAQYwABAG IMIABAjAEEAIgxgAAAMQYQACDGAAIAxBhAAIAYAwgAEGMAAQBiDCAAQIwBBACIMYAAADEGEAAgxgACAMQYQACAGAMIABBj AAEAYgwgAECMAQQAiDGAAAAxBhAAIMYAAgDEGEAAgBgDCAAQYwABAGIMIABAjAEEAIgxgAAAMQYQACDGAAIAxBhAAIAYAw gAEGMAAQBiDCAAQIwBBACIMYAAADEGEAAgxgACAMQYQACAGAMIABBjAAEAYgwgAECMAQQAiDGAAAAxBhAAIMYAAgDEGEAA gBgDCAAQYwABAGIMIABAjAEEAIgxgAAAMQYQACDGAAIAxBhAAIAYAwgAEGMAAQBiDCAAQIwBBACIMYAAADEGEAAgxgACAM QYQACAGAMIABBjAAEAYgwgAECMAQQAiDGAAAAxBhAAIMYAAgDEGEAAgBgDCAAQYwABAGIMIABAjAEEAIgxgAAAMQYQACDG AAIAxBhAAIAYAwgAEGMAAQBiDCAAQMwDTJIFIhe4sbUAAAAASUVORK5CYII=";
 }
