@@ -1,6 +1,5 @@
 package karino2.livejournal.com.meatpieday;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -14,13 +13,10 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
-
-import com.github.gfx.android.orma.Relation;
 
 import org.apache.commons.io.IOUtils;
 
@@ -30,7 +26,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 
 import io.reactivex.Completable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
 public class BookActivity extends AppCompatActivity {
@@ -67,7 +62,7 @@ public class BookActivity extends AppCompatActivity {
         super.onRestoreInstanceState(savedInstanceState);
         setupBook(savedInstanceState.getLong("BOOK_ID"));
     }
-    MyOrmaListAdapter<Cell> adapter = null;
+    CellListAdapter<Cell> adapter = null;
 
 
     @Override
@@ -316,57 +311,9 @@ public class BookActivity extends AppCompatActivity {
         return getOrmaDatabase().selectFromCell().idEq(cellid).get(0);
     }
 
-    class MyOrmaListAdapter<CellModel extends Cell> extends  RelodableOrmaListAdapter<CellModel> {
-
-        public MyOrmaListAdapter(@NonNull Context context, @NonNull Relation<CellModel, ?> relation) {
-            super(context, relation);
-        }
-
-
-        @Override
-        public boolean hasStableIds() {
-            return true;
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return this.delegate.getItem(position).id;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            CellView view;
-            if(convertView == null) {
-                view = (CellView)getLayoutInflater().inflate(R.layout.list_item, null);
-
-                    /*
-                    view.setOnClickListener((v) -> {
-                        CellView cv = (CellView)v;
-                        if(view.isImage()) {
-                            return;
-                        }
-                        Intent intent = new Intent(BookActivity.this, EditActivity.class);
-                        intent.putExtra("BOOK_ID", book.id);
-                        intent.putExtra("CELL_ID", cv.getBoundCell().id);
-                        startActivity(intent);
-                    });
-                    */
-            } else {
-                view = (CellView)convertView;
-            }
-            CellModel cell = getItem(position);
-            view.bindCell(cell);
-            return view;
-        }
-    }
-
     @NonNull
-    private MyOrmaListAdapter<Cell> createListAdapter(final OrmaDatabase orma) {
-        return new MyOrmaListAdapter(this, getCellRelation(orma, book));
-    }
-
-    public static Cell_Relation getCellRelation(OrmaDatabase orma, Book target) {
-        return orma.relationOfCell().bookEq(target).orderByViewOrderAsc();
+    private CellListAdapter<Cell> createListAdapter(final OrmaDatabase orma) {
+        return CellListAdapter.create(this, orma, book);
     }
 
     public static Cell createNewCell(OrmaDatabase orma, Book book1, int cellType, String source) {
@@ -395,38 +342,6 @@ public class BookActivity extends AppCompatActivity {
         Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
     }
 
-    /*
-    @Override
-    public boolean onContextItemSelected(MenuItem item) {
-        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-        Cell cell = ((CellView)info.targetView).getBoundCell();
-        switch(item.getItemId()) {
-            case R.id.edit_item:
-                getSharedPreferences("state", MODE_PRIVATE)
-                        .edit()
-                        .putLong("WAIT_IMAGE_ID", cell.id)
-                        .commit();
-
-                showMessage("Send image to this app, then replace selected image.");
-                break;
-            case R.id.delete_item:
-                Completable.fromAction(()-> {
-                    getOrmaDatabase()
-                            .deleteFromCell()
-                            .idEq(cell.id)
-                            .execute();
-                }).subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(() -> adapter.notifyDataSetChanged());
-
-                break;
-        }
-
-
-
-        return super.onContextItemSelected(item);
-    }
-    */
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

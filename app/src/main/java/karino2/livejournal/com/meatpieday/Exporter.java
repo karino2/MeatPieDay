@@ -63,7 +63,7 @@ public class Exporter {
 
         writer.name("cells");
         writer.beginArray();
-        BookActivity.getCellRelation(orma, target)
+        CellListAdapter.getCellRelation(orma, target)
                 .selector()
                 .executeAsObservable()
                 .subscribe(cell -> {
