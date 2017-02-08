@@ -21,6 +21,7 @@ import java.io.InputStream;
 
 import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Action;
 import io.reactivex.schedulers.Schedulers;
 
 public class ImageReceiveActivity extends AppCompatActivity {
@@ -144,23 +145,24 @@ public class ImageReceiveActivity extends AppCompatActivity {
             return false;
 
         imgCell.source = png64;
-        insertCellAndFinish(imgCell);
+        updateCellAndFinish(imgCell);
         return true;
     }
 
+
     private void insertCellAndFinish(Cell imgCell) {
-        Completable.fromAction(()-> {
+        upsertCellAndFinish(()-> {
+            getOrmaDatabase().insertIntoCell(imgCell);
+        }, "add image.");
+    }
+
+    private void updateCellAndFinish(Cell imgCell) {
+        upsertCellAndFinish(()-> {
             getOrmaDatabase().updateCell()
                     .idEq(imgCell.id)
                     .source(imgCell.source)
                     .execute();
-        })
-        .subscribeOn(Schedulers.io())
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribe(()-> {
-            showMessage("replace image.");
-            finish();
-        });
+        }, "replace image.");
 
 
         /*                .
@@ -175,6 +177,16 @@ public class ImageReceiveActivity extends AppCompatActivity {
                 finish();
             });
             */
+    }
+
+    private void upsertCellAndFinish(Action action, String msg) {
+        Completable.fromAction(action)
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(()-> {
+            showMessage(msg);
+            finish();
+        });
     }
 
     private boolean newImageToTailAndFinish() {
