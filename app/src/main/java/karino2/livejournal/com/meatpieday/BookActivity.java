@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -34,7 +35,6 @@ public class BookActivity extends AppCompatActivity {
 
     void setupBook(long bookid) {
         OrmaDatabase orma = getOrmaDatabase();
-
         book = orma.selectFromBook()
                 .idEq(bookid)
                 .get(0);
@@ -48,15 +48,15 @@ public class BookActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+    protected void onSaveInstanceState(Bundle outState) {
         outState.putLong("BOOK_ID", book.id);
-        super.onSaveInstanceState(outState, outPersistentState);
+        super.onSaveInstanceState(outState);
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-        setupBook(savedInstanceState.getLong("BOOK_ID"));
+        setupBook(savedInstanceState.getLong("BOOK_ID", -1));
     }
     CellListAdapter<Cell> adapter = null;
 
