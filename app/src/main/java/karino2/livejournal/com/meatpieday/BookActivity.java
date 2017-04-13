@@ -60,6 +60,28 @@ public class BookActivity extends AppCompatActivity {
     }
     CellListAdapter<Cell> adapter = null;
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.book_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.share_book_item:
+                getSender().sendTo(book);
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @NonNull
+    private BookSender getSender() {
+        return new BookSender(this, getOrmaDatabase());
+    }
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
