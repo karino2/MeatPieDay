@@ -43,6 +43,7 @@ public class ImageReceiveActivity extends AppCompatActivity {
         if(bookId == -1) {
             showMessage("No book is opend. Open window first.");
             finish();
+            return;
         }
 
         Intent intent = getIntent();
@@ -54,12 +55,20 @@ public class ImageReceiveActivity extends AppCompatActivity {
             return;
         }
 
+
+        book = getBook(bookId);
+        if(book  == null) {
+            showMessage("No book selected. Please select book first.");
+            finish();
+            return;
+        }
+
+
         mimeType = intent.getType();
 
         setContentView(R.layout.activity_image_receive);
         ListView lv = (ListView)findViewById(R.id.listView);
 
-        setupBook(bookId);
 
         adapter = (CellListAdapter<Cell>) CellListAdapter.create(this, getOrmaDatabase(), book);
         lv.setAdapter(adapter);
@@ -110,11 +119,14 @@ public class ImageReceiveActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void setupBook(long bookId) {
+    Book getBook(long bookId) {
         OrmaDatabase orma = getOrmaDatabase();
-        book =  orma.selectFromBook()
-                .idEq(bookId)
-                .get(0);
+        Book_Selector selector = orma.selectFromBook()
+                .idEq(bookId);
+        if(selector.isEmpty())
+            return null;
+
+        return selector.get(0);
     }
 
     String getPng64(Uri uri) {
