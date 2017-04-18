@@ -129,12 +129,23 @@ public class ImageReceiveActivity extends AppCompatActivity {
         return selector.get(0);
     }
 
+    final int MAX_IMAGE_BYTES = 1500*1000;
+
     String getPng64(Uri uri) {
         InputStream stream = null;
         try {
             stream = getContentResolver().openInputStream(uri);
             byte[] bytes = IOUtils.toByteArray(stream);
-            return Base64.encodeToString(bytes, Base64.DEFAULT);
+            if( bytes.length > MAX_IMAGE_BYTES) {
+                showMessage("Too large image.");
+                return null;
+            }
+            String res = Base64.encodeToString(bytes, Base64.DEFAULT);
+            if(res.length() > MAX_IMAGE_BYTES) {
+                showMessage("Too large image.");
+                return null;
+            }
+            return res;
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             showMessage("file not found: " + e.getMessage());
@@ -153,8 +164,10 @@ public class ImageReceiveActivity extends AppCompatActivity {
 
     private boolean updateImageAndFinish(Cell imgCell) {
         String png64 = getPng64(uri);
-        if(png64 == null)
+        if(png64 == null) {
+            finish();
             return false;
+        }
 
         imgCell.source = png64;
         updateCellAndFinish(imgCell);
@@ -203,8 +216,10 @@ public class ImageReceiveActivity extends AppCompatActivity {
 
     private boolean newImageToTailAndFinish() {
         String png64 = getPng64(uri);
-        if(png64 == null)
+        if(png64 == null) {
+            finish();
             return false;
+        }
 
         OrmaDatabase orma= getOrmaDatabase();
         Cell cell = createNewImageCell(orma, book, png64);
