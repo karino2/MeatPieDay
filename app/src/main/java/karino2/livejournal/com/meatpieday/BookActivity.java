@@ -25,6 +25,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Date;
 
 import io.reactivex.Completable;
 import io.reactivex.schedulers.Schedulers;
@@ -268,12 +269,19 @@ public class BookActivity extends AppCompatActivity {
         }
 
     }
-    private void insertCellAbove(Cell below, int cellType, String source) {
+
+    static Cell createCell(Book book, int cellType, String source, long viewOrder) {
         Cell cell = new Cell();
         cell.book = book;
         cell.cellType = cellType;
         cell.source = source;
-        cell.viewOrder = below.viewOrder;
+        cell.viewOrder = viewOrder;
+        cell.lastModified = (new Date()).getTime();
+        return cell;
+    }
+
+    private void insertCellAbove(Cell below, int cellType, String source) {
+        Cell cell = createCell(book, cellType, source, below.viewOrder);
 
         OrmaDatabase orma = getOrmaDatabase();
         orma.transactionAsCompletable(
@@ -302,15 +310,13 @@ public class BookActivity extends AppCompatActivity {
     }
 
     public static Cell createNewCell(OrmaDatabase orma, Book book1, int cellType, String source) {
-        Cell cell = new Cell();
-        cell.book = book1;
-        cell.cellType = cellType;
-        cell.source = source;
+        long viewOrder =1;
         try {
-            cell.viewOrder = orma.selectFromCell().bookEq(book1).maxByViewOrder() + 1;
+            viewOrder = orma.selectFromCell().bookEq(book1).maxByViewOrder() + 1;
         }catch(NullPointerException e) {
-            cell.viewOrder = 1; // no cell in this book yet. so assign 1.
+            viewOrder = 1; // no cell in this book yet. so assign 1.
         }
+        Cell cell = createCell(book1, cellType, source, viewOrder);
 
         return cell;
     }

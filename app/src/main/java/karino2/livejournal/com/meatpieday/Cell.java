@@ -33,6 +33,8 @@ public class Cell {
     @Column
     public String source;
 
+    @Column(defaultExpr = "0")
+    public long lastModified = 0;
 
 
     public static final int CELL_TYPE_TEXT = 0;
@@ -130,7 +132,9 @@ public class Cell {
         */
         writer.beginObject()
                 .name("cell_type").value("markdown")
-                .name("metadata").beginObject().endObject()
+                .name("metadata").beginObject()
+                    .name("updated_at").value(lastModified)
+                    .endObject()
                 .name("source").beginArray().value(source).endArray()
                 .endObject();
 
