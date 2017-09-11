@@ -20,7 +20,11 @@
         </activity>
         <activity android:name=".BookActivity">
         </activity>
-        <activity android:name=".EditActivity" />
+        <activity android:name=".EditActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".BookActivity" />
+        </activity>
         <activity android:name=".ImageReceiveActivity">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />

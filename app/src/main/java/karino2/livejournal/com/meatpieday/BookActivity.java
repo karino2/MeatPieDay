@@ -95,8 +95,13 @@ public class BookActivity extends AppCompatActivity {
         Intent intent = getIntent();
         if(intent != null) {
             long id = getIntent().getLongExtra("BOOK_ID", -1);
-            if(id == -1)
-                throw new RuntimeException("No book ID.");
+            if(id == -1) {
+                // Up from EditActivity case, this is legal now.
+                id  = getPrefs().getLong("BOOK_ID", -1);
+                if(id == -1) {
+                    throw new RuntimeException("No book ID.");
+                }
+            }
             setupBook(id);
             getPrefs().edit()
                     .putLong("BOOK_ID", id)

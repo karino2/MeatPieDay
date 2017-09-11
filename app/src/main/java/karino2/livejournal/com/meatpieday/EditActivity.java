@@ -2,6 +2,7 @@ package karino2.livejournal.com.meatpieday;
 
 import android.content.Intent;
 import android.os.PersistableBundle;
+import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.KeyEvent;
@@ -36,6 +37,8 @@ public class EditActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         EditText et = (EditText)findViewById(R.id.editText);
         et.setOnKeyListener((v, keyCode, e)-> {
@@ -72,6 +75,10 @@ public class EditActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
+            // Respond to the action bar's Up/Home button
+            case android.R.id.home:
+                NavUtils.navigateUpFromSameTask(this);
+                return true;
             case R.id.save_item:
                 saveMarkdown();
                 break;
