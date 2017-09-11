@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
 import android.view.ActionMode;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -116,6 +117,22 @@ public class BookActivity extends AppCompatActivity {
                 CellView cv = (CellView)view;
                 handleEditCell(cv.getBoundCell());
             }
+        });
+
+        lv.setOnKeyListener((v, keyCode, e) -> {
+            if(e.getAction() == KeyEvent.ACTION_UP) {
+                switch(keyCode) {
+                    case KeyEvent.KEYCODE_A:
+                        long id = lv.getSelectedItemId();
+                        if(id == -1) {
+                            return false;
+                        }
+                        Cell cell =  getOrmaDatabase().selectFromCell().idEq(id).get(0);
+                        insertNewMarkdownAbove(cell);
+                        return true;
+                }
+            }
+            return false;
         });
 
         findViewById(R.id.buttonNew).setOnClickListener(new View.OnClickListener() {

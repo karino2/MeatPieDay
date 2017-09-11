@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.PersistableBundle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
@@ -36,6 +37,16 @@ public class EditActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit);
 
+        EditText et = (EditText)findViewById(R.id.editText);
+        et.setOnKeyListener((v, keyCode, e)-> {
+            if(keyCode == KeyEvent.KEYCODE_ENTER && e.getAction() == KeyEvent.ACTION_DOWN &&
+                    e.isShiftPressed()) {
+                saveMarkdown();
+                return true;
+            }
+            return false;
+        });
+
         Intent intent = getIntent();
         if(intent != null) {
             bookId = intent.getLongExtra("BOOK_ID", -1);
@@ -43,9 +54,10 @@ public class EditActivity extends AppCompatActivity {
                 throw new RuntimeException("No book ID.");
 
             cellId = intent.getLongExtra("CELL_ID", -1);
-            EditText et = (EditText)findViewById(R.id.editText);
             et.setText(getCell(cellId).source);
         }
+
+
 
 
     }
@@ -100,13 +112,5 @@ public class EditActivity extends AppCompatActivity {
         }).subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(()->finish());
-        /*
-        orma.prepareInsertIntoCellAsSingle()
-                .subscribeOn(Schedulers.io())
-                .subscribe(x->x.execute(cell));
-                */
-
-
-        // finishActivity(RESULT_OK);
     }
 }
