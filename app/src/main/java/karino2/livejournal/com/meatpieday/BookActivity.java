@@ -3,12 +3,9 @@ package karino2.livejournal.com.meatpieday;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Base64;
-import android.util.Log;
 import android.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -20,11 +17,6 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import org.apache.commons.io.IOUtils;
-
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -128,13 +120,22 @@ public class BookActivity extends AppCompatActivity {
             if(e.getAction() == KeyEvent.ACTION_UP) {
                 switch(keyCode) {
                     case KeyEvent.KEYCODE_A:
+                    case KeyEvent.KEYCODE_B:
+                    {
                         long id = lv.getSelectedItemId();
-                        if(id == -1) {
+                        if (id == -1) {
                             return false;
                         }
-                        Cell cell =  getOrmaDatabase().selectFromCell().idEq(id).get(0);
-                        insertNewMarkdownAbove(cell);
+
+                        Cell cell = getOrmaDatabase().selectFromCell().idEq(id).get(0);
+                        long insertPos = cell.viewOrder;
+                        if(keyCode == KeyEvent.KEYCODE_B) {
+                            insertPos += 1; // insert below.
+                        }
+                        insertNewMarkdownAt(insertPos);
                         return true;
+                    }
+
                 }
             }
             return false;
@@ -302,8 +303,13 @@ public class BookActivity extends AppCompatActivity {
         return cell;
     }
 
+
     private void insertCellAbove(Cell below, int cellType, String source) {
-        Cell cell = createCell(book, cellType, source, below.viewOrder);
+        insertCellAt(below.viewOrder, cellType, source);
+    }
+
+    private void insertCellAt(long insertPos, int cellType, String source) {
+        Cell cell = createCell(book, cellType, source, insertPos);
 
         OrmaDatabase orma = getOrmaDatabase();
         orma.transactionAsCompletable(
@@ -316,13 +322,17 @@ public class BookActivity extends AppCompatActivity {
     }
 
     private void insertNewMarkdownAbove(Cell target) {
-        insertCellAbove(target, Cell.CELL_TYPE_TEXT, "(empty)");
+        insertNewMarkdownAt(target.viewOrder);
 
     }
     private void insertNewImageAbove(Cell target) {
         insertCellAbove(target, Cell.CELL_TYPE_IMAGE, EMPTY_IMAGE_BASE64);
     }
 
+
+    public void insertNewMarkdownAt(long insertAt) {
+        insertCellAt(insertAt, Cell.CELL_TYPE_TEXT, "(empty)");
+    }
 
 
     @NonNull
