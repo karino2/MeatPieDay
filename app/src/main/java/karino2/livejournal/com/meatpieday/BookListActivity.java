@@ -16,6 +16,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -195,6 +196,14 @@ public class BookListActivity extends AppCompatActivity {
                 EditText et = (EditText)dialog.findViewById(R.id.book_name_edit);
                 et.setTag(args.getLong("BOOK_ID"));
                 et.setText(args.getString("BOOK_NAME"));
+                et.setOnEditorActionListener((v, aid, ev) -> {
+                    if(aid == EditorInfo.IME_ACTION_DONE) {
+                        renameBook((EditText) v);
+                        dialog.dismiss();
+                        return true;
+                    }
+                    return false;
+                });
                 break;
         }
     }
@@ -211,17 +220,7 @@ public class BookListActivity extends AppCompatActivity {
                         .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 EditText et = (EditText) textEntryView.findViewById(R.id.book_name_edit);
-                                long bookId = (long) et.getTag();
-                                String newBookName = et.getText().toString();
-
-                                getOrmaDatabase()
-                                        .relationOfBook()
-                                        .idEq(bookId)
-                                        .updater()
-                                        .name(newBookName)
-                                        .executeAsSingle()
-                                        .subscribeOn(Schedulers.io())
-                                        .subscribe();
+                                renameBook(et);
                             }
                         })
                         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -231,6 +230,20 @@ public class BookListActivity extends AppCompatActivity {
                         .create();
         }
         return super.onCreateDialog(id, args);
+    }
+
+    private void renameBook(EditText et) {
+        long bookId = (long) et.getTag();
+        String newBookName = et.getText().toString();
+
+        getOrmaDatabase()
+                .relationOfBook()
+                .idEq(bookId)
+                .updater()
+                .name(newBookName)
+                .executeAsSingle()
+                .subscribeOn(Schedulers.io())
+                .subscribe();
     }
 
     static OrmaDatabase ormaDatabase;
