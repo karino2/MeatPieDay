@@ -19,6 +19,10 @@
             </intent-filter>
         </activity>
         <activity android:name=".BookActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".BookListActivity" />
+
         </activity>
         <activity android:name=".EditActivity">
             <meta-data
