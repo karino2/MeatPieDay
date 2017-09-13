@@ -33,6 +33,8 @@ public class BookActivity extends AppCompatActivity {
         book = orma.selectFromBook()
                 .idEq(bookid)
                 .get(0);
+
+        getSupportActionBar().setTitle(book.name);
     }
 
     OrmaDatabase db = null;
