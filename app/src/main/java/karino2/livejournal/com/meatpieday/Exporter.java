@@ -42,9 +42,17 @@ public class Exporter {
         return file;
     }
 
+
     public File exportBook(OrmaDatabase orma, Book target) throws IOException {
+        File targetDir = getStoreDirectory();
+
+        return exportBookAt(orma, target, targetDir);
+    }
+
+    @NonNull
+    private File exportBookAt(OrmaDatabase orma, Book target, File targetDir) throws IOException {
         String filename = createFileName(target);
-        File file = new File(getStoreDirectory(), filename);
+        File file = new File(targetDir, filename);
 
         saveBookToFile(orma, file, target);
         return file;
@@ -54,6 +62,23 @@ public class Exporter {
     private String createFileName(Book target) {
         SimpleDateFormat timeStampFormat = new SimpleDateFormat("yyyyMMdd_HHmmssSS");
         return timeStampFormat.format(new Date()) + "_" + target.name + ".ipynb";
+    }
+
+    public void doDeleteBook(OrmaDatabase orma, Book book1) {
+        orma.deleteFromCell()
+                .bookEq(book1)
+                .execute();
+        orma.deleteFromBook()
+                .idEq(book1.id)
+                .execute();
+    }
+
+    public File backupAndDelete(OrmaDatabase orma, Book target) throws IOException {
+        File recycleDir = new File(getStoreDirectory(), "recyclebin");
+        ensureDirExist(recycleDir);
+        File result = exportBookAt(orma, target, recycleDir);
+        doDeleteBook(orma, target);
+        return result;
     }
 
 

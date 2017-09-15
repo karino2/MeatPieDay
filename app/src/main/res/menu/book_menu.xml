@@ -5,4 +5,8 @@
         app:showAsAction="always"
         android:icon="@android:drawable/ic_menu_share"
         android:id="@+id/share_book_item" />
+    <item android:title="Delete"
+        app:showAsAction="ifRoom"
+        android:icon="@android:drawable/ic_menu_delete"
+        android:id="@+id/delete_book_item" />
 </menu>

@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import io.reactivex.Completable;
+import io.reactivex.Single;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
 public class BookActivity extends AppCompatActivity {
@@ -72,7 +74,16 @@ public class BookActivity extends AppCompatActivity {
                 return true;
             case R.id.share_book_item:
                 getSender().sendTo(book);
-                break;
+                return true;
+            case R.id.delete_book_item:
+                OrmaDatabase orma = getOrmaDatabase();
+                Single.fromCallable(() -> (new Exporter()).backupAndDelete(orma, book))
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                .map(f -> {
+                    showMessage("File is backed up at: " + f.getAbsolutePath());
+                    return 1;
+                }).subscribe( (i) -> finish());
         }
         return super.onOptionsItemSelected(item);
     }

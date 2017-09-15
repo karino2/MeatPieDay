@@ -167,16 +167,12 @@ public class BookListActivity extends AppCompatActivity {
                 break;
             case R.id.delete_book_item:
                 OrmaDatabase orma = getOrmaDatabase();
-                orma.transactionAsCompletable( () -> {
-                    orma.deleteFromCell()
-                            .bookEq(book)
-                            .execute();
-                    orma.deleteFromBook()
-                            .idEq(book.id)
-                            .execute();
-                })
-                .subscribeOn(Schedulers.io())
-                .subscribe();
+                Single.fromCallable(() -> (new Exporter()).backupAndDelete(orma, book))
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(f -> {
+                            showMessage("File is backed up at: " + f.getAbsolutePath());
+                        });
                 break;
 
         }
