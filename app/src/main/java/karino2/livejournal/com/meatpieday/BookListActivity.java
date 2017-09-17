@@ -16,6 +16,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.EditText;
@@ -189,6 +190,7 @@ public class BookListActivity extends AppCompatActivity {
         super.onPrepareDialog(id, dialog, args);
         switch(id) {
             case RENAME_DIALOG_ID:
+                dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
                 EditText et = (EditText)dialog.findViewById(R.id.book_name_edit);
                 et.setTag(args.getLong("BOOK_ID"));
                 et.setText(args.getString("BOOK_NAME"));
