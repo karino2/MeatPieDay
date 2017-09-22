@@ -28,8 +28,8 @@ public class EditActivity extends AppCompatActivity {
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-        bookId = savedInstanceState.getLong("BOOK_ID");
-        cellId = savedInstanceState.getLong("CELL_ID");
+        bookId = savedInstanceState.getLong("BOOK_ID", bookId);
+        cellId = savedInstanceState.getLong("CELL_ID", cellId);
     }
 
 
