@@ -97,15 +97,21 @@ public class BookListActivity extends AppCompatActivity {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 Book book = this.getItem(position);
-                TextView view;
+                View container;
                 if(convertView == null) {
-                    view = new TextView(BookListActivity.this);
+                    container = getLayoutInflater().inflate(R.layout.book_list_item, null);
                 } else {
-                    view = (TextView)convertView;
+                    container = convertView;
                 }
-                view.setTag(book);
-                view.setText(book.name);
-                return view;
+
+
+                container.setTag(book);
+
+                TextView date = (TextView)container.findViewById(R.id.textViewDate);
+                TextView bookName = (TextView)container.findViewById(R.id.textViewName);
+                date.setText(android.text.format.DateFormat.format("yyyy-MM-dd HH:mm", book.createdTime));
+                bookName.setText(book.name);
+                return container;
             }
         };
         lv.setAdapter(adapter);
