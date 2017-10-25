@@ -27,6 +27,7 @@ public class Exporter {
     }
 
     File getStoreDirectory() throws IOException {
+        // getExternalStoragePublicDirectory
         File dir = new File(Environment.getExternalStorageDirectory(), folderName);
         ensureDirExist(dir);
         return dir;
