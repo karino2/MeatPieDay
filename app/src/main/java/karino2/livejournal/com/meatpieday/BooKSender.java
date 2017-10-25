@@ -3,6 +3,7 @@ package karino2.livejournal.com.meatpieday;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.support.v4.content.FileProvider;
 import android.widget.Toast;
 
 import java.io.File;
@@ -44,7 +45,10 @@ public class BookSender {
     private void sendToFile(File exported) {
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("application/x-ipynb+json");
-        intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(exported));
+        Uri fileUri = FileProvider.getUriForFile(context,
+                BuildConfig.APPLICATION_ID+".provider",
+                exported);
+        intent.putExtra(Intent.EXTRA_STREAM, fileUri);
         context.startActivity(intent);
     }
 

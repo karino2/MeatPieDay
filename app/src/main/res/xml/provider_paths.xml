@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+See http://yuki312.blogspot.jp/2014/04/androidfileprovider.html
+
+Shared URL:
+ content://karino2.livejournal.com.meatpieday.fileprovider/[external_files]/hoge.jpg
+
+real path:
+ karino2.livejournal.com.meatpieday/files/[./]hoge.jpg
+ -->
+<paths>
+    <external-path name="external_files" path="."/>
+</paths>
