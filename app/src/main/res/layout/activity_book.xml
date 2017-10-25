@@ -25,6 +25,8 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_above="@id/buttonNew"
+        android:transcriptMode="alwaysScroll"
+        android:stackFromBottom="true"
         android:layout_marginBottom="28dp" />
 
 
