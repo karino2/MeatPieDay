@@ -10,17 +10,25 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="karino2.livejournal.com.meatpieday.EditActivity">
 
-    <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:gravity="top"
-        android:inputType="textMultiLine"
-        android:ems="10"
-        android:id="@+id/editText"
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:fillViewport="true"
+        >
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="top"
+            android:inputType="textMultiLine"
+            android:ems="10"
+            android:id="@+id/editText"
+         />
+
+    </ScrollView>
 </RelativeLayout>
