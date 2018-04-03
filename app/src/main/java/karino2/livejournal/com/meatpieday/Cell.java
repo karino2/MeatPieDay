@@ -86,6 +86,13 @@ public class Cell {
 
         final int DUMMY_EXEC_COUNT = 1;
 
+        String mimeType = getMimeType(source);
+        if(mimeType == null) {
+            //invalid data. not comming here for usual case (comming here means import bug, etc...)
+            // just ignore. (because some important information in other cell and we want to export it.
+            return;
+        }
+
         writer.beginObject();
         writer.name("cell_type").value("code")
                 .name("execution_count").value(DUMMY_EXEC_COUNT) // dummy val
@@ -95,7 +102,7 @@ public class Cell {
                 .beginArray()
                 .beginObject()
                 .name("data").beginObject()
-                        .name(getMimeType(source) /* "image/png" */ ).value(source)
+                        .name(mimeType /* "image/png" */ ).value(source)
                         .name("text/plain").beginArray().value("<IPython.core.display.Image object>").endArray()
                     .endObject()
                 .name("execution_count").value(DUMMY_EXEC_COUNT) // dummy val
