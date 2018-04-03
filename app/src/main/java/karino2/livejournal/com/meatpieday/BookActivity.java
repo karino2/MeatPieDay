@@ -20,6 +20,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.regex.Pattern;
 
 import io.reactivex.Completable;
 import io.reactivex.Single;
@@ -47,6 +48,15 @@ public class BookActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onStart() {
+        if(needMenuUpdate) {
+            supportInvalidateOptionsMenu();
+            needMenuUpdate = false;
+        }
+        super.onStart();
+    }
+
+    @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putLong("BOOK_ID", book.id);
         super.onSaveInstanceState(outState);
@@ -63,6 +73,37 @@ public class BookActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.book_menu, menu);
         return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem item = menu.findItem(R.id.sync_read_book_item);
+        item.setVisible(false);
+        if(book != null) {
+            CellListAdapter.getCellRelation(getOrmaDatabase(), book)
+                    .selector()
+                    .executeAsObservable()
+                    .firstElement()
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(cell ->{
+                        boolean syncEnable = hasIssueId(cell);
+                        item.setVisible(syncEnable);
+                    });
+
+        }
+
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    private boolean hasIssueId(Cell firstCell) {
+        if(firstCell.cellType != Cell.CELL_TYPE_TEXT)
+            return false;
+
+        String body = firstCell.source;
+        if(Pattern.matches(" *IssueId: *[0-9]+ *", body))
+            return true;
+        return false;
     }
 
     @Override
@@ -165,12 +206,19 @@ public class BookActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(BookActivity.this, EditActivity.class);
                 intent.putExtra("BOOK_ID", book.id);
-                startActivity(intent);
+                startEditActivity(intent);
             }
         });
 
 
 
+    }
+
+    boolean needMenuUpdate = false;
+
+    private void startEditActivity(Intent intent) {
+        needMenuUpdate =true;
+        startActivity(intent);
     }
 
     @NonNull
@@ -222,7 +270,9 @@ public class BookActivity extends AppCompatActivity {
 
                             // TODO: update viewOrder here.
                         }).subscribeOn(Schedulers.io())
-                                .subscribe();
+                                .subscribe(()->{
+                                    supportInvalidateOptionsMenu();
+                                });
 
                         actionMode.finish();
                         return true;
@@ -266,7 +316,7 @@ public class BookActivity extends AppCompatActivity {
             Intent intent = new Intent(BookActivity.this, EditActivity.class);
             intent.putExtra("BOOK_ID", book.id);
             intent.putExtra("CELL_ID", cell.id);
-            startActivity(intent);
+            startEditActivity(intent);
         }
     }
 
