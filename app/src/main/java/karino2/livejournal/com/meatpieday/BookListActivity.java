@@ -24,6 +24,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.util.Date;
 
 import io.reactivex.Single;
@@ -33,6 +34,7 @@ import io.reactivex.schedulers.Schedulers;
 public class BookListActivity extends AppCompatActivity {
 
     static final int RENAME_DIALOG_ID = 1;
+    static final int REQUEST_PICK_IPYNB = 2;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -55,9 +57,41 @@ public class BookListActivity extends AppCompatActivity {
             case R.id.menu_new:
                 createNewBook();
                 return true;
+            case R.id.menu_import:
+                showMessage("Choose ipynb file");
+                Intent i = new Intent();
+                i.setAction(Intent.ACTION_GET_CONTENT);
+                i.setType("application/x-ipynb+json");
+                startActivityForResult(i, REQUEST_PICK_IPYNB);
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch(requestCode) {
+            case REQUEST_PICK_IPYNB:
+                if(resultCode != RESULT_OK)
+                    return;
+
+                String path = data.getData().getPath();
+                try {
+                    Importer importer = new Importer();
+                    importer.importIpynb(getOrmaDatabase(), path)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(()-> {
+                        showMessage("Import done");
+
+                    });
+                }catch(IOException ioe) {
+                    showMessage("ipyng import fail. path: "+ path + ",  message:" + ioe.getMessage());
+                }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
     RelodableOrmaListAdapter<Book> adapter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
