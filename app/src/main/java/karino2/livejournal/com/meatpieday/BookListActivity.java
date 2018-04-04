@@ -5,7 +5,10 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -24,7 +27,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
 
 import io.reactivex.Single;
@@ -70,8 +75,29 @@ public class BookListActivity extends AppCompatActivity {
     public static Intent createIPYNBPickIntent() {
         Intent i = new Intent();
         i.setAction(Intent.ACTION_GET_CONTENT);
-        i.setType("application/x-ipynb+json");
+        i.setType("text/*");
         return i;
+    }
+
+
+    String fileName(Uri uri) {
+        if("file".equals(uri.getScheme())) {
+            File file = new File(uri.getPath());
+            return file.getName();
+        }
+
+
+        Cursor cursor = null;
+        try {
+            cursor = getContentResolver().query(uri, new String[]{MediaStore.Files.FileColumns.DISPLAY_NAME}, null, null, null);
+            if(cursor.moveToFirst()) {
+                return cursor.getString(cursor.getColumnIndex(MediaStore.Files.FileColumns.DISPLAY_NAME));
+            }
+            return "";
+        }finally {
+            if(cursor != null)
+                cursor.close();
+        }
     }
 
     @Override
@@ -81,18 +107,26 @@ public class BookListActivity extends AppCompatActivity {
                 if(resultCode != RESULT_OK)
                     return;
 
-                String path = data.getData().getPath();
+                Uri uri = data.getData();
+                String dispName = fileName(uri);
+                if(dispName == null) {
+                    showMessage("Can't retrieve filename.");
+                    return;
+                }
+
+
                 try {
+                    InputStream inputStream = getContentResolver().openInputStream(uri);
                     Importer importer = new Importer();
-                    importer.importIpynb(getOrmaDatabase(), path)
+                    importer.importIpynb(getOrmaDatabase(), dispName, inputStream)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(()-> {
+                        inputStream.close();
                         showMessage("Import done");
-
                     });
                 }catch(IOException ioe) {
-                    showMessage("ipyng import fail. path: "+ path + ",  message:" + ioe.getMessage());
+                    showMessage("ipyng import fail. path: "+ dispName + ",  message:" + ioe.getMessage());
                 }
         }
         super.onActivityResult(requestCode, resultCode, data);

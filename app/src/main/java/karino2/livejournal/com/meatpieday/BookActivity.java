@@ -3,6 +3,7 @@ package karino2.livejournal.com.meatpieday;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
@@ -19,6 +20,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.regex.Pattern;
@@ -144,17 +146,20 @@ public class BookActivity extends AppCompatActivity {
                 if(resultCode != RESULT_OK)
                     return;
 
-                String path = data.getData().getPath();
+                Uri uri = data.getData();
                 try {
+                    InputStream stream = getContentResolver().openInputStream(uri);
+
                     Importer importer = new Importer();
-                    importer.syncReadIpynb(getOrmaDatabase(), book, path)
+                    importer.syncReadIpynb(getOrmaDatabase(), book, stream)
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe(()-> {
                                 showMessage("Sync done");
+                                stream.close();
                             });
                 }catch(IOException ioe) {
-                    showMessage("ipyng import fail. path: "+ path + ",  message:" + ioe.getMessage());
+                    showMessage("ipyng import fail. uri: "+ uri.toString() + ",  message:" + ioe.getMessage());
                 }
         }
         super.onActivityResult(requestCode, resultCode, data);

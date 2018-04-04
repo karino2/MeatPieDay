@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.regex.Matcher;
@@ -22,34 +23,19 @@ import karino2.livejournal.com.meatpieday.json.JsonNote;
  */
 
 public class Importer {
-    public JsonNote readIpynb(String path) throws IOException {
-        FileInputStream fis = null;
 
-        try {
-            fis =new FileInputStream(path);
-            return JsonNote.fromJson(fis);
-        } finally {
-            if(fis != null)
-                fis.close();
-        }
-    }
-
-    public Completable importIpynb(OrmaDatabase orma, String path) throws IOException {
-        File ipynb = new File(path);
-        String fname = ipynb.getName();
+    public Completable importIpynb(OrmaDatabase orma, String fname, InputStream stream) throws IOException {
         if(!fname.endsWith(".ipynb")) {
             throw new IOException("File extention is not ipynb.");
         }
         String bookName= fname.substring(0, fname.length()-6);
         bookName = stripDate(bookName);
 
-        JsonNote note = readIpynb(path);
-
-
+        JsonNote note = JsonNote.fromJson(stream);
 
         Book book = new Book();
         book.name = bookName;
-        book.createdTime = new Date(ipynb.lastModified());
+        book.createdTime = new Date();
 
         long viewOrder = 1;
         ArrayList<Cell> cellList = new ArrayList<>();
@@ -90,10 +76,9 @@ public class Importer {
     }
 
 
-    public Completable syncReadIpynb(OrmaDatabase orma, Book book, String path) throws IOException {
-        File ipynb = new File(path);
+    public Completable syncReadIpynb(OrmaDatabase orma, Book book, InputStream stream) throws IOException {
 
-        JsonNote note = readIpynb(path);
+        JsonNote note = JsonNote.fromJson(stream);
         return orma.transactionAsCompletable(() -> {
                 CellListAdapter.getCellRelation(orma, book)
                         .selector()
