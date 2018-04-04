@@ -59,13 +59,19 @@ public class BookListActivity extends AppCompatActivity {
                 return true;
             case R.id.menu_import:
                 showMessage("Choose ipynb file");
-                Intent i = new Intent();
-                i.setAction(Intent.ACTION_GET_CONTENT);
-                i.setType("application/x-ipynb+json");
+                Intent i = createIPYNBPickIntent();
                 startActivityForResult(i, REQUEST_PICK_IPYNB);
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @NonNull
+    public static Intent createIPYNBPickIntent() {
+        Intent i = new Intent();
+        i.setAction(Intent.ACTION_GET_CONTENT);
+        i.setType("application/x-ipynb+json");
+        return i;
     }
 
     @Override

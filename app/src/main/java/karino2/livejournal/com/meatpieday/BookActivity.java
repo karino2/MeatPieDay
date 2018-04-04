@@ -18,6 +18,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.regex.Pattern;
@@ -30,6 +31,7 @@ import io.reactivex.schedulers.Schedulers;
 public class BookActivity extends AppCompatActivity {
 
     Book book;
+    final static int REQUEST_PICK_IPYNB = 1;
 
     void setupBook(long bookid) {
         OrmaDatabase orma = getOrmaDatabase();
@@ -116,6 +118,11 @@ public class BookActivity extends AppCompatActivity {
             case R.id.share_book_item:
                 getSender().sendTo(book);
                 return true;
+            case R.id.sync_read_book_item:
+                showMessage("Choose ipynb file");
+                Intent intent = BookListActivity.createIPYNBPickIntent();
+                startActivityForResult(intent, REQUEST_PICK_IPYNB);
+                return true;
             case R.id.delete_book_item:
                 OrmaDatabase orma = getOrmaDatabase();
                 Single.fromCallable(() -> (new Exporter()).backupAndDelete(orma, book))
@@ -127,6 +134,30 @@ public class BookActivity extends AppCompatActivity {
                 }).subscribe( (i) -> finish());
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // REQUEST_PICK_IPYNB
+        switch(requestCode) {
+            case REQUEST_PICK_IPYNB:
+                if(resultCode != RESULT_OK)
+                    return;
+
+                String path = data.getData().getPath();
+                try {
+                    Importer importer = new Importer();
+                    importer.syncReadIpynb(getOrmaDatabase(), book, path)
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(()-> {
+                                showMessage("Sync done");
+                            });
+                }catch(IOException ioe) {
+                    showMessage("ipyng import fail. path: "+ path + ",  message:" + ioe.getMessage());
+                }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @NonNull

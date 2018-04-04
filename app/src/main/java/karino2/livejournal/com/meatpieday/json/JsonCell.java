@@ -39,6 +39,16 @@ public class JsonCell {
         return jsonElementToString(source);
     }
 
+    public String getCellSource() {
+        if(getCellType() == JsonCell.CellType.CODE) {
+           return cellImageAsBase64();
+        } else {
+            return getSource();
+        }
+
+    }
+    public int getCellTypeValue() { return getCellType().val; }
+
 
     static String jsonElementToString(JsonElement obj) {
         if(obj == null)

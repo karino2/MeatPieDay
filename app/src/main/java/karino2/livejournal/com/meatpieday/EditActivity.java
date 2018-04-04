@@ -14,6 +14,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
 
+import java.util.Date;
+
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
@@ -137,14 +139,19 @@ public class EditActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    Cell newCell(String source) {
+        OrmaDatabase orma = BookListActivity.getOrmaDatabaseInstance(this);
+        Book book = orma.selectFromBook().idEq(bookId).get(0);
+        return BookActivity.createNewCell(orma, book, Cell.CELL_TYPE_TEXT, source);
+    }
+
     Cell getCell(long cellid) {
         OrmaDatabase orma = BookListActivity.getOrmaDatabaseInstance(this);
 
         if(cellid != -1) {
             return orma.selectFromCell().idEq(cellid).get(0);
         } else {
-            Book book = orma.selectFromBook().idEq(bookId).get(0);
-            return BookActivity.createNewCell(orma, book, Cell.CELL_TYPE_TEXT, "");
+            return newCell("");
         }
 
     }
@@ -159,11 +166,12 @@ public class EditActivity extends AppCompatActivity {
 
 
             if(cellId != -1) {
-                orma.updateCell().idEq(cellId).source(text).execute();
+                orma.updateCell().idEq(cellId)
+                        .source(text)
+                        .lastModified((new Date()).getTime())
+                        .execute();
             } else {
-                Cell cell = getCell(cellId);
-                cell.source = text;
-
+                Cell cell = newCell(text);
                 orma.insertIntoCell(cell);
             }
 
