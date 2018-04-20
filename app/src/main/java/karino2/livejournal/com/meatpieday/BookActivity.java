@@ -79,10 +79,12 @@ public class BookActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
+    boolean isSyncable = false;
+
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         MenuItem item = menu.findItem(R.id.sync_read_book_item);
-        item.setVisible(false);
+        item.setVisible(isSyncable);
         if(book != null) {
             CellListAdapter.getCellRelation(getOrmaDatabase(), book)
                     .selector()
@@ -91,8 +93,8 @@ public class BookActivity extends AppCompatActivity {
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(cell ->{
-                        boolean syncEnable = hasIssueId(cell);
-                        item.setVisible(syncEnable);
+                        isSyncable = hasIssueId(cell);
+                        item.setVisible(isSyncable);
                     });
 
         }

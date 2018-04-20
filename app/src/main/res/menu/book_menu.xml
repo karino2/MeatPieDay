@@ -10,7 +10,7 @@
         android:icon="@android:drawable/ic_menu_delete"
         android:id="@+id/delete_book_item" />
     <item android:title="SyncR"
-        app:showAsAction="ifRoom"
+        app:showAsAction="never"
         android:icon="@android:drawable/ic_popup_sync"
         android:id="@+id/sync_read_book_item" />
 
