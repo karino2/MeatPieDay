@@ -300,6 +300,10 @@ public class BookActivity extends AppCompatActivity {
                             ids.add(id);
                         }
 
+                        // change action mode cause adapter related operation, which cause race condition.
+                        // call before delete execute.
+                        actionMode.finish();
+
                         Completable.fromAction(()-> {
                             getOrmaDatabase()
                                     .deleteFromCell()
@@ -312,7 +316,6 @@ public class BookActivity extends AppCompatActivity {
                                     supportInvalidateOptionsMenu();
                                 });
 
-                        actionMode.finish();
                         return true;
                     case R.id.insert_image_item:{
                         Cell cell = getSelectedCell();
