@@ -18,6 +18,8 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import io.github.karino2.kotlitex.MarkdownView;
+
 public class CellView extends FrameLayout {
 
 
@@ -28,7 +30,7 @@ public class CellView extends FrameLayout {
     }
 
     CellType cellType = CellType.UNINITIALIZE;
-    TextView markDownView;
+    MarkdownView markDownView;
     ImageView imageView;
     Cell cell = null;
 
@@ -41,7 +43,7 @@ public class CellView extends FrameLayout {
 
     void ensureInitialize() {
         if(cellType == CellType.UNINITIALIZE) {
-            markDownView = (TextView)findViewById(R.id.textView);
+            markDownView = (MarkdownView)findViewById(R.id.textView);
             imageView = (ImageView)findViewById(R.id.imageView);
 
             cellType = CellType.TEXT;
@@ -75,7 +77,7 @@ public class CellView extends FrameLayout {
     void setMarkdownContents(String text) {
         ensureInitialize();
 
-        markDownView.setText(text);
+        markDownView.setMarkdown(text);
 
         if(cellType != CellType.TEXT) {
             imageView.setVisibility(GONE);
