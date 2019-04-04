@@ -1,24 +1,14 @@
 package karino2.livejournal.com.meatpieday;
 
 import android.content.Context;
-import android.content.Intent;
-import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.drawable.Drawable;
-import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.util.Base64;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.TextView;
 
-import io.github.karino2.kotlitex.MarkdownView;
+import io.github.karino2.kotlitex.view.MarkdownView;
 
 public class CellView extends FrameLayout {
 
