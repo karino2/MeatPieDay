@@ -9,6 +9,10 @@
         app:showAsAction="ifRoom"
         android:icon="@android:drawable/ic_menu_delete"
         android:id="@+id/delete_book_item" />
+    <item android:title="Create Header"
+        app:showAsAction="ifRoom"
+        android:icon="@drawable/baseline_input_white_24"
+        android:id="@+id/create_header_item" />
     <item android:title="SyncR"
         app:showAsAction="never"
         android:icon="@android:drawable/ic_popup_sync"

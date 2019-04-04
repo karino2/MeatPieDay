@@ -1,5 +1,8 @@
 package karino2.livejournal.com.meatpieday;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -83,6 +86,21 @@ public class BookActivity extends AppCompatActivity {
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
+        prepareSyncMenuItem(menu);
+
+
+        MenuItem item = menu.findItem(R.id.create_header_item);
+        ClipboardManager clipboard = getClipboardManager();
+        item.setVisible(clipboard.hasPrimaryClip());
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    private ClipboardManager getClipboardManager() {
+        return (ClipboardManager)
+                    getSystemService(Context.CLIPBOARD_SERVICE);
+    }
+
+    private void prepareSyncMenuItem(Menu menu) {
         MenuItem item = menu.findItem(R.id.sync_read_book_item);
         item.setVisible(isSyncable);
         if(book != null) {
@@ -98,8 +116,6 @@ public class BookActivity extends AppCompatActivity {
                     });
 
         }
-
-        return super.onPrepareOptionsMenu(menu);
     }
 
     private boolean hasIssueId(Cell firstCell) {
@@ -122,6 +138,9 @@ public class BookActivity extends AppCompatActivity {
             case R.id.share_book_item:
                 getSender().sendTo(book);
                 return true;
+            case R.id.create_header_item:
+                createNewHeaderCellFromClipboard();
+                return true;
             case R.id.sync_read_book_item:
                 showMessage("Choose ipynb file");
                 Intent intent = BookListActivity.createIPYNBPickIntent();
@@ -138,6 +157,13 @@ public class BookActivity extends AppCompatActivity {
                 }).subscribe( (i) -> finish());
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void createNewHeaderCellFromClipboard() {
+        ClipboardManager clipboard = getClipboardManager();
+
+        ClipData.Item item = clipboard.getPrimaryClip().getItemAt(0);
+        insertCellAt(1, Cell.CELL_TYPE_TEXT, item.getText().toString());
     }
 
     @Override
