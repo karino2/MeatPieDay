@@ -1,7 +1,7 @@
 package karino2.livejournal.com.meatpieday;
 
 import android.os.Environment;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.google.gson.stream.JsonWriter;
 

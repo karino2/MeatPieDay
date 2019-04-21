@@ -1,9 +1,7 @@
 package karino2.livejournal.com.meatpieday;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;

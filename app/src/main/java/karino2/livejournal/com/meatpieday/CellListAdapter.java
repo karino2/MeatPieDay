@@ -1,11 +1,12 @@
 package karino2.livejournal.com.meatpieday;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.github.gfx.android.orma.Relation;
+import com.github.gfx.android.orma.rx.RxRelation;
 import com.github.gfx.android.orma.widget.OrmaListAdapter;
 
 /**
@@ -13,7 +14,7 @@ import com.github.gfx.android.orma.widget.OrmaListAdapter;
  */
 class CellListAdapter<CellModel extends Cell> extends OrmaListAdapter<CellModel> {
 
-    public CellListAdapter(@NonNull Context context, @NonNull Relation<CellModel, ?> relation) {
+    public CellListAdapter(@NonNull Context context, @NonNull RxRelation<CellModel, ?> relation) {
         super(context, relation);
     }
 

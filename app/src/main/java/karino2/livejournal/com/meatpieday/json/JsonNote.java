@@ -1,6 +1,6 @@
 package karino2.livejournal.com.meatpieday.json;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;

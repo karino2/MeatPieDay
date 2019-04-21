@@ -1,9 +1,10 @@
 package karino2.livejournal.com.meatpieday;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.github.gfx.android.orma.Relation;
+import com.github.gfx.android.orma.rx.RxRelation;
 import com.github.gfx.android.orma.widget.OrmaAdapter;
 
 /**
@@ -11,7 +12,7 @@ import com.github.gfx.android.orma.widget.OrmaAdapter;
  */
 public class ReloadableOrmaAdapter<Model> extends OrmaAdapter {
 
-    public ReloadableOrmaAdapter(@NonNull Context context, @NonNull Relation relation) {
+    public ReloadableOrmaAdapter(@NonNull Context context, @NonNull RxRelation relation) {
         super(context, relation);
     }
 
