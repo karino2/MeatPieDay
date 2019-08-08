@@ -1,1 +1,1 @@
-include ':app', ':kotlitex'
+include ':app', ':kotlitex', ':tegashiki'

@@ -6,4 +6,8 @@
         android:icon="@android:drawable/ic_menu_save"
         app:showAsAction="ifRoom"
         ></item>
+    <item android:id="@+id/tegashiki_item"
+        android:title="Tegashiki"
+        app:showAsAction="ifRoom"
+        ></item>
 </menu>

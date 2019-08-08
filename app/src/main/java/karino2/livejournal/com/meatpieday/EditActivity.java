@@ -1,5 +1,6 @@
 package karino2.livejournal.com.meatpieday;
 
+import android.app.Dialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -9,6 +10,7 @@ import androidx.core.app.NavUtils;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.ActionMode;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -16,13 +18,17 @@ import android.widget.EditText;
 
 import java.util.Date;
 
+import io.github.karino2.tegashiki.TegashikiDialog;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
+import kotlin.Unit;
 
 public class EditActivity extends AppCompatActivity {
 
     long bookId = -1;
     long cellId = -1;
+
+    final int DIALOG_ID_TEGASHIKI=1;
 
     @Override
     public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
@@ -135,8 +141,55 @@ public class EditActivity extends AppCompatActivity {
             case R.id.save_item:
                 saveMarkdown();
                 break;
+            case R.id.tegashiki_item:
+                EditText et = (EditText)findViewById(R.id.editText);
+                int curPos = et.getSelectionEnd();
+
+                CharSequence text = et.getText();
+                et.setText(text.subSequence(0, curPos) + "$$  $$"  + text.subSequence(curPos, text.length()));
+                et.setSelection(curPos+3);
+
+                showDialog(DIALOG_ID_TEGASHIKI);
+                break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    void insertTextToCurrentPos(String text) {
+        EditText et = (EditText)findViewById(R.id.editText);
+        int curPos = et.getSelectionEnd();
+
+        CharSequence charSeq = et.getText();
+        et.setText(charSeq.subSequence(0, curPos) + text + charSeq.subSequence(curPos, charSeq.length()));
+        et.setSelection(curPos+text.length());
+    }
+
+
+
+    @Override
+    protected Dialog onCreateDialog(int id) {
+        switch(id) {
+            case DIALOG_ID_TEGASHIKI:
+                Dialog dialog =  new TegashikiDialog(this);
+                dialog.getWindow().setGravity(Gravity.BOTTOM);
+                return dialog;
+        }
+        return super.onCreateDialog(id);
+    }
+
+    @Override
+    protected void onPrepareDialog(int id, Dialog dialog) {
+        switch(id) {
+            case DIALOG_ID_TEGASHIKI:
+                TegashikiDialog tegashiki = (TegashikiDialog)dialog;
+                tegashiki.setSendResultListener((tex)-> {
+                    insertTextToCurrentPos(tex);
+                    tegashiki.clearAll();
+                    return Unit.INSTANCE;
+                });
+                return;
+        }
+        super.onPrepareDialog(id, dialog);
     }
 
     Cell newCell(String source) {
