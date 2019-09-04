@@ -11,3 +11,5 @@ app/releases/
 app/release/
 .idea/caches/
 kotlitex/copy.bat
+tegashiki/build/.transforms/
+kotlitex/build/.transforms/
