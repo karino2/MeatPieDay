@@ -187,6 +187,7 @@ public class EditActivity extends AppCompatActivity {
                     tegashiki.clearAll();
                     return Unit.INSTANCE;
                 });
+                tegashiki.startListening();
                 return;
         }
         super.onPrepareDialog(id, dialog);
