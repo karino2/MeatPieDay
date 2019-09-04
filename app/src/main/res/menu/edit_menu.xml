@@ -7,7 +7,11 @@
         app:showAsAction="ifRoom"
         ></item>
     <item android:id="@+id/tegashiki_item"
-        android:title="Tegashiki"
+        android:title="$$T$$"
+        app:showAsAction="ifRoom"
+        ></item>
+    <item android:id="@+id/tegashiki_raw_item"
+        android:title="T(raw)"
         app:showAsAction="ifRoom"
         ></item>
 </menu>

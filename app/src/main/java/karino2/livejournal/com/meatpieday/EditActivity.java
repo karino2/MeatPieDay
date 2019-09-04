@@ -151,6 +151,9 @@ public class EditActivity extends AppCompatActivity {
 
                 showDialog(DIALOG_ID_TEGASHIKI);
                 break;
+            case R.id.tegashiki_raw_item:
+                showDialog(DIALOG_ID_TEGASHIKI);
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
